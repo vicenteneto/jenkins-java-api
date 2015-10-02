@@ -95,6 +95,15 @@ public class JenkinsServer {
 		}
 	}
 	
+	public HttpResponse<String> executeScript(String script)
+			throws JenkinsServerException {
+		try {
+			return jenkinsClient.post_url_encoded("/scriptText", "script=" + script);
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
+	
 	private boolean checkResponseStatus(int response, int status) {
 		if (response == status) {
 			return true;

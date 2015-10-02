@@ -22,15 +22,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.mashape.unirest</groupId>
-			<artifactId>unirest-java</artifactId>
-			<version>1.4.7</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.4</version>
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.0</version>
+			<groupId>com.mashape.unirest</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>1.4.7</version>
 		</dependency>
 
 		<!-- Unirest dependencies -->
@@ -56,4 +56,5 @@
 		</dependency>
 
 	</dependencies>
+
 </project>

@@ -43,6 +43,21 @@ public class JenkinsClient {
 		return post(createURI(path, parameter), requestBody);
 	}
 
+	public HttpResponse<String> post_url_encoded(String path, String requestBody)
+			throws JenkinsClientException {
+		try {
+			String contentType = ConfigurationUtil.getConfiguration("CONTENT_TYPE");
+			String applicationUrlencoded = ConfigurationUtil.getConfiguration("APPLICATION_X_WWW_FORM_URLENCODED");
+			
+			return Unirest.post(createURI(path).build().toString())
+					.header(contentType, applicationUrlencoded)
+					.body(requestBody)
+					.asString();
+		} catch (UnirestException | URISyntaxException exception) {
+			throw new JenkinsClientException(exception);
+		}
+	}
+
 	private HttpResponse<String> get(URIBuilder uriBuilder)
 			throws JenkinsClientException {
 		try {
