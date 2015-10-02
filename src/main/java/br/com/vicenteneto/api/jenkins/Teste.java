@@ -20,5 +20,6 @@ public class Teste {
 		
 		JenkinsServer server = new JenkinsServer(serverURI);
 		HttpResponse<String> deleteJob = server.deleteJob("test");
+		System.out.println(deleteJob);
 	}
 }
