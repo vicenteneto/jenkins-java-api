@@ -94,6 +94,15 @@ public class JenkinsServer {
 			throw new JenkinsServerException(exception);
 		}
 	}
+
+	public HttpResponse<String> deleteJob(String name)
+			throws JenkinsServerException {
+		try {
+			return jenkinsClient.post_xml("/job/" + name + "/doDelete");
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
 	
 	public HttpResponse<String> executeScript(String script)
 			throws JenkinsServerException {

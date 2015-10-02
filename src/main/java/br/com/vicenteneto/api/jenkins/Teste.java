@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
 
+import com.mashape.unirest.http.HttpResponse;
+
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
 
 public class Teste {
@@ -17,6 +19,6 @@ public class Teste {
 				.build();
 		
 		JenkinsServer server = new JenkinsServer(serverURI);
-		System.out.println(server.executeScript("out.println '-' * 80").getBody());
+		HttpResponse<String> deleteJob = server.deleteJob("test");
 	}
 }
