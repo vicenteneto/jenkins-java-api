@@ -1,4 +1,4 @@
-package br.com.vicenteneto.api.jenkins;
+package br.com.vicenteneto.api.jenkins.tests;
 
 import java.net.URI;
 
@@ -17,6 +17,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.mashape.unirest.http.Headers;
 import com.mashape.unirest.http.HttpResponse;
 
+import br.com.vicenteneto.api.jenkins.JenkinsServer;
 import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
 
 @RunWith(PowerMockRunner.class)
