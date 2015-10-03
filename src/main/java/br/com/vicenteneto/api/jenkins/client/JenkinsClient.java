@@ -32,15 +32,15 @@ public class JenkinsClient {
 		return get(createURI(path, parameter));
 	}
 
-	public HttpResponse<String> post_xml(String path) throws JenkinsClientException {
+	public HttpResponse<String> postXML(String path) throws JenkinsClientException {
 		return post(createURI(path), "");
 	}
 
-	public HttpResponse<String> post_xml(String path, String requestBody) throws JenkinsClientException {
+	public HttpResponse<String> postXML(String path, String requestBody) throws JenkinsClientException {
 		return post(createURI(path), requestBody);
 	}
 
-	public HttpResponse<String> post_xml(String path, ImmutablePair<String, String> parameter, String requestBody)
+	public HttpResponse<String> postXML(String path, ImmutablePair<String, String> parameter, String requestBody)
 			throws JenkinsClientException {
 		return post(createURI(path, parameter), requestBody);
 	}
@@ -66,7 +66,7 @@ public class JenkinsClient {
 		}
 	}
 
-	public HttpResponse<String> post_url_encoded(String path, String requestBody) throws JenkinsClientException {
+	public HttpResponse<String> postURLEncoded(String path, String requestBody) throws JenkinsClientException {
 		try {
 			String contentType = ConfigurationUtil.getConfiguration("CONTENT_TYPE");
 			String applicationUrlencoded = ConfigurationUtil.getConfiguration("APPLICATION_X_WWW_FORM_URLENCODED");

@@ -60,7 +60,7 @@ public class JenkinsServer {
 		try {
 			String viewXML = xStream.toXML(new ListView(name));
 
-			return jenkinsClient.post_xml(Constants.URL_CREATE_VIEW,
+			return jenkinsClient.postXML(Constants.URL_CREATE_VIEW,
 					new ImmutablePair<String, String>("name", name), viewXML);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
@@ -87,7 +87,7 @@ public class JenkinsServer {
 		try {
 			String jobXML = xStream.toXML(new Job());
 
-			return jenkinsClient.post_xml(Constants.URL_CREATE_JOB,
+			return jenkinsClient.postXML(Constants.URL_CREATE_JOB,
 					new ImmutablePair<String, String>("name", name), jobXML);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
@@ -97,7 +97,7 @@ public class JenkinsServer {
 	public HttpResponse<String> deleteJob(String name)
 			throws JenkinsServerException {
 		try {
-			return jenkinsClient.post_xml("/job/" + name + Constants.URL_DO_DELETE);
+			return jenkinsClient.postXML("/job/" + name + Constants.URL_DO_DELETE);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
@@ -106,7 +106,7 @@ public class JenkinsServer {
 	public HttpResponse<String> executeScript(String script)
 			throws JenkinsServerException {
 		try {
-			return jenkinsClient.post_url_encoded(Constants.URL_SCRIPT_TEXT, "script=" + script);
+			return jenkinsClient.postURLEncoded(Constants.URL_SCRIPT_TEXT, "script=" + script);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}

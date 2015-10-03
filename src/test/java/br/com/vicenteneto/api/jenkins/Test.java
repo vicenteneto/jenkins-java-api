@@ -9,7 +9,7 @@ import com.mashape.unirest.http.HttpResponse;
 
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
 
-public class Teste {
+public class Test {
 	public static void main(String[] args)
 			throws URISyntaxException, JenkinsServerException {
 		URI serverURI = new URIBuilder()
