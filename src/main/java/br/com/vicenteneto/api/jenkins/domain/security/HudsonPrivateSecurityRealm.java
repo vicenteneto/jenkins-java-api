@@ -18,6 +18,6 @@ public class HudsonPrivateSecurityRealm implements SecurityRealm {
 
 	@Override
 	public String getGroovyScript() {
-		return String.format("new HudsonPrivateSecurityRealm(%b)", allowsSignUp);
+		return String.format("def security = new HudsonPrivateSecurityRealm(%b);", allowsSignUp);
 	}
 }

@@ -36,7 +36,7 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 					+ "}\n"
 				+ "}\n";
 
-		script += "def strategy = new ProjectMatrixAuthorizationStrategy();\n";
+		script += "def authorization = new ProjectMatrixAuthorizationStrategy();\n";
 		
 		for (String sid : sids) {
 			String userPermission = "def " + sid + "Permissions = [\n";

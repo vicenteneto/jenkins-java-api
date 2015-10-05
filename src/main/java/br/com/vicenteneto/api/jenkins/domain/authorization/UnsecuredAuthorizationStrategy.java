@@ -4,6 +4,6 @@ public class UnsecuredAuthorizationStrategy implements AuthorizationStrategy {
 
 	@Override
 	public String getGroovyScript() {
-		return "def strategy = new AuthorizationStrategy.Unsecured();";
+		return "def authorization = new AuthorizationStrategy.Unsecured();";
 	}
 }

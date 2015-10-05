@@ -4,6 +4,6 @@ public class FullControlOnceLoggedInAuthorizationStrategy implements Authorizati
 
 	@Override
 	public String getGroovyScript() {
-		return "def strategy = new FullControlOnceLoggedInAuthorizationStrategy();";
+		return "def authorization = new FullControlOnceLoggedInAuthorizationStrategy();";
 	}
 }

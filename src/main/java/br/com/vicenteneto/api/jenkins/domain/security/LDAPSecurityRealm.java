@@ -89,7 +89,7 @@ public class LDAPSecurityRealm implements SecurityRealm {
 
 	@Override
 	public String getGroovyScript() {
-		return String.format("new LDAPSecurityRealm('%s', '%s', '%s', '%s', '%s', '%s', '%s', %b)",
+		return String.format("def security = new LDAPSecurityRealm('%s', '%s', '%s', '%s', '%s', '%s', '%s', %b);",
 				server, rootDN, userSearchBase, userSearch, groupSearchBase, managerDN, managerPassword, inhibitInferRootDN);
 	}
 }

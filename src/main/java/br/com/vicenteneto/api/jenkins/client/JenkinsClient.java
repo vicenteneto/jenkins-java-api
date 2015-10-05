@@ -20,6 +20,8 @@ import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
 
 public class JenkinsClient {
 
+	private static final String EMPTY_STRING = "";
+
 	private URI serverURI;
 	private String username;
 	private String password;
@@ -29,7 +31,7 @@ public class JenkinsClient {
 	}
 
 	public JenkinsClient(URI serverURI, String username, String password) {
-		this.serverURI = serverURI;
+		this(serverURI);
 		this.username = username;
 		this.password = password;
 	}
@@ -44,16 +46,20 @@ public class JenkinsClient {
 	}
 
 	public HttpResponse<String> postXML(String path) throws JenkinsClientException {
-		return post(createURI(path), "");
+		return post(createURI(path), EMPTY_STRING, MediaType.APPLICATION_XML_VALUE);
 	}
 
 	public HttpResponse<String> postXML(String path, String requestBody) throws JenkinsClientException {
-		return post(createURI(path), requestBody);
+		return post(createURI(path), requestBody, MediaType.APPLICATION_XML_VALUE);
 	}
 
 	public HttpResponse<String> postXML(String path, ImmutablePair<String, String> parameter, String requestBody)
 			throws JenkinsClientException {
-		return post(createURI(path, parameter), requestBody);
+		return post(createURI(path, parameter), requestBody, MediaType.APPLICATION_XML_VALUE);
+	}
+
+	public HttpResponse<String> postURLEncoded(String path, String requestBody) throws JenkinsClientException {
+		return post(createURI(path), requestBody, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
 	}
 
 	private HttpResponse<String> get(URIBuilder uriBuilder) throws JenkinsClientException {
@@ -66,21 +72,10 @@ public class JenkinsClient {
 		}
 	}
 
-	private HttpResponse<String> post(URIBuilder uriBuilder, String requestBody) throws JenkinsClientException {
+	private HttpResponse<String> post(URIBuilder uriBuilder, String requestBody, String mediaType) throws JenkinsClientException {
 		try {
 			return Unirest.post(uriBuilder.build().toString())
-					.headers(createHeaders(MediaType.APPLICATION_XML_VALUE))
-					.body(requestBody)
-					.asString();
-		} catch (UnirestException | URISyntaxException exception) {
-			throw new JenkinsClientException(exception);
-		}
-	}
-
-	public HttpResponse<String> postURLEncoded(String path, String requestBody) throws JenkinsClientException {
-		try {
-			return Unirest.post(createURI(path).build().toString())
-					.headers(createHeaders(MediaType.APPLICATION_FORM_URLENCODED_VALUE))
+					.headers(createHeaders(mediaType))
 					.body(requestBody)
 					.asString();
 		} catch (UnirestException | URISyntaxException exception) {
@@ -99,20 +94,17 @@ public class JenkinsClient {
 	private URIBuilder createURI(String path, ImmutablePair<String, String> parameter) {
 		URIBuilder uriBuilder = createURI(path);
 		uriBuilder.addParameter(parameter.getKey(), parameter.getValue());
-
 		return uriBuilder;
 	}
 
 	private Map<String, String> createHeaders(String contentTypeValue) {
-		String contentType = ConfigurationUtil.getConfiguration("CONTENT_TYPE");
-
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(contentType, contentTypeValue);
-		
+		headers.put(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), contentTypeValue);
+
 		if (StringUtils.isNotEmpty(username)) {
+			String encryptedPassword = new String(Base64.encodeBase64(String.format("%s:%s", username, password).getBytes()));
 			String authorization = ConfigurationUtil.getConfiguration("AUTHORIZATION");
-			String authValue = "Basic " + new String(Base64.encodeBase64(String.format("%s:%s", username, password).getBytes()));
-			
+			String authValue = String.format("Basic %s", encryptedPassword);
 			headers.put(authorization, authValue);
 		}
 

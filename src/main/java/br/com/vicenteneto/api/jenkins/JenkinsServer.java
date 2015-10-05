@@ -21,7 +21,9 @@ import br.com.vicenteneto.api.jenkins.util.Constants;
 
 public class JenkinsServer {
 
+	private static final String SLASH = ConfigurationUtil.getConfiguration("SLASH");
 	private static final String API_JSON = ConfigurationUtil.getConfiguration("API_JSON");
+	private static final String NAME = ConfigurationUtil.getConfiguration("NAME");
 
 	private JenkinsClient jenkinsClient;
 	private XStream xStream;
@@ -33,88 +35,83 @@ public class JenkinsServer {
 
 	public JenkinsServer(URI serverURI) {
 		this();
-		
 		jenkinsClient = new JenkinsClient(serverURI);
 	}
 
 	public JenkinsServer(URI serverURI, String username, String password) {
 		this();
-		
 		jenkinsClient = new JenkinsClient(serverURI, username, password);
 	}
 	
 	public HttpResponse<String> setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
-		String importHudsonSecurity = "import hudson.security.*;";
+		String importHudsonSecurity = ConfigurationUtil.getConfiguration("IMPORT_HUDSON_SECURITY");
 		String security = securityRealm.getGroovyScript();
-		String script = String.format("%s%ndef instance = Jenkins.getInstance();%ninstance.setSecurityRealm(%s);%ninstance.save();", importHudsonSecurity, security);
-		return executeScript(script);
+		String jenkinsInstance = ConfigurationUtil.getConfiguration("JENKINS_INSTANCE");
+		String setSecurityRealm = ConfigurationUtil.getConfiguration("JENKINS_SET_SECURITY_REALM");
+		String jenkinsSave = ConfigurationUtil.getConfiguration("JENKINS_SAVE");
+		
+		return executeScript(createString(importHudsonSecurity, security, jenkinsInstance, setSecurityRealm, jenkinsSave));
 	}
-	
+
 	public HttpResponse<String> setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) throws JenkinsServerException {
-		String importHudsonSecurity = "import hudson.security.*;";
-		String strategy = authorizationStrategy.getGroovyScript();
-		String script = String.format("%s%n%s%ndef instance = Jenkins.getInstance();%ninstance.setAuthorizationStrategy(strategy);%ninstance.save();", importHudsonSecurity, strategy);
-		return executeScript(script);
+		String importHudsonSecurity = ConfigurationUtil.getConfiguration("IMPORT_HUDSON_SECURITY");
+		String authorization = authorizationStrategy.getGroovyScript();
+		String jenkinsInstance = ConfigurationUtil.getConfiguration("JENKINS_INSTANCE");
+		String setAuthorizationStrategy = ConfigurationUtil.getConfiguration("JENKINS_SET_AUTHORIZATION_STRATEGY");
+		String jenkinsSave = ConfigurationUtil.getConfiguration("JENKINS_SAVE");
+		
+		return executeScript(createString(importHudsonSecurity, authorization, jenkinsInstance, setAuthorizationStrategy, jenkinsSave));
 	}
 
 	public String getVersion() throws JenkinsServerException {
 		try {
-			HttpResponse<String> response = jenkinsClient.get("/");
+			HttpResponse<String> response = jenkinsClient.get(SLASH);
 			return response.getHeaders().getFirst(ConfigurationUtil.getConfiguration("X_JENKINS"));
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
 	}
 
-	public HttpResponse<String> getViewByName(String name)
-			throws JenkinsServerException {
+	public HttpResponse<String> getViewByName(String name) throws JenkinsServerException {
 		return getByName(ItemType.VIEW, name);
 	}
 
-	public boolean checkViewExists(String name)
-			throws JenkinsServerException {
-		return checkResponseStatus(getViewByName(name).getStatus(), HttpStatus.SC_OK);
+	public boolean checkViewExists(String name) throws JenkinsServerException {
+		return getViewByName(name).getStatus() == HttpStatus.SC_OK;
 	}
 
-	public HttpResponse<String> createView(String name)
-			throws JenkinsServerException {
+	public HttpResponse<String> createView(String name) throws JenkinsServerException {
 		if (checkViewExists(name)) {
-			throw new JenkinsServerException(
-					String.format("View %s already exists", name));
+			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("VIEW_ALREADY_EXISTS"), name));
 		}
 		
 		try {
 			String viewXML = xStream.toXML(new ListView(name));
 
-			return jenkinsClient.postXML(Constants.URL_CREATE_VIEW,
-					new ImmutablePair<String, String>("name", name), viewXML);
+			return jenkinsClient.postXML(Constants.URL_CREATE_VIEW, new ImmutablePair<String, String>(NAME, name), viewXML);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
 	}
 
-	public HttpResponse<String> getJobByName(String name)
-			throws JenkinsServerException {
+	public HttpResponse<String> getJobByName(String name) throws JenkinsServerException {
 		return getByName(ItemType.JOB, name);
 	}
 
-	public boolean checkJobExists(String name)
-			throws JenkinsServerException {
-		return checkResponseStatus(getJobByName(name).getStatus(), HttpStatus.SC_OK);
+	public boolean checkJobExists(String name) throws JenkinsServerException {
+		return getJobByName(name).getStatus() == HttpStatus.SC_OK;
 	}
 
 	public HttpResponse<String> createJob(String name)
 			throws JenkinsServerException {
 		if (checkJobExists(name)) {
-			throw new JenkinsServerException(
-					String.format("Job %s already exists", name));
+			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("JOB_ALREADY_EXISTS"), name));
 		}
 		
 		try {
 			String jobXML = xStream.toXML(new Job());
 
-			return jenkinsClient.postXML(Constants.URL_CREATE_JOB,
-					new ImmutablePair<String, String>("name", name), jobXML);
+			return jenkinsClient.postXML(Constants.URL_CREATE_JOB, new ImmutablePair<String, String>(NAME, name), jobXML);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
@@ -123,35 +120,33 @@ public class JenkinsServer {
 	public HttpResponse<String> deleteJob(String name)
 			throws JenkinsServerException {
 		try {
-			return jenkinsClient.postXML("/job/" + name + Constants.URL_DO_DELETE);
+			return jenkinsClient.postXML(SLASH + ItemType.JOB.getValue() + SLASH + name + Constants.URL_DO_DELETE);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
 	}
 	
-	public HttpResponse<String> executeScript(String script)
-			throws JenkinsServerException {
+	public HttpResponse<String> executeScript(String script) throws JenkinsServerException {
 		try {
-			return jenkinsClient.postURLEncoded(Constants.URL_SCRIPT_TEXT, "script=" + script);
+			return jenkinsClient.postURLEncoded(Constants.URL_SCRIPT_TEXT, ConfigurationUtil.getConfiguration("SCRIPT") + script);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
-	}
-	
-	private boolean checkResponseStatus(int response, int status) {
-		if (response == status) {
-			return true;
-		}
-		
-		return false;
 	}
 
-	private HttpResponse<String> getByName(ItemType type, String name)
-			throws JenkinsServerException {
+	private HttpResponse<String> getByName(ItemType type, String name) throws JenkinsServerException {
 		try {
-			return jenkinsClient.get("/" + type.getValue() + "/" + name + API_JSON, new ImmutablePair<String, String>("tree", "name"));
+			return jenkinsClient.get(SLASH + type.getValue() + SLASH + name + API_JSON, new ImmutablePair<String, String>("tree", NAME));
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
+	}
+	
+	private String createString(String... strings) {
+		StringBuilder strBuilder = new StringBuilder();
+		for (String str : strings) {
+			strBuilder.append(str);
+		}
+		return strBuilder.toString();
 	}
 }
