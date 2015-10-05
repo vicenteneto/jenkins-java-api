@@ -12,6 +12,8 @@ import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
 import br.com.vicenteneto.api.jenkins.domain.ItemType;
 import br.com.vicenteneto.api.jenkins.domain.Job;
 import br.com.vicenteneto.api.jenkins.domain.ListView;
+import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
+import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
 import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
@@ -23,12 +25,36 @@ public class JenkinsServer {
 
 	private JenkinsClient jenkinsClient;
 	private XStream xStream;
-
-	public JenkinsServer(URI serverURI) {
-		jenkinsClient = new JenkinsClient(serverURI);
-		
+	
+	private JenkinsServer() {
 		xStream = new XStream();
 		xStream.autodetectAnnotations(true);
+	}
+
+	public JenkinsServer(URI serverURI) {
+		this();
+		
+		jenkinsClient = new JenkinsClient(serverURI);
+	}
+
+	public JenkinsServer(URI serverURI, String username, String password) {
+		this();
+		
+		jenkinsClient = new JenkinsClient(serverURI, username, password);
+	}
+	
+	public HttpResponse<String> setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
+		String importHudsonSecurity = "import hudson.security.*;";
+		String security = securityRealm.getGroovyScript();
+		String script = String.format("%s%ndef instance = Jenkins.getInstance();%ninstance.setSecurityRealm(%s);%ninstance.save();", importHudsonSecurity, security);
+		return executeScript(script);
+	}
+	
+	public HttpResponse<String> setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) throws JenkinsServerException {
+		String importHudsonSecurity = "import hudson.security.*;";
+		String strategy = authorizationStrategy.getGroovyScript();
+		String script = String.format("%s%n%s%ndef instance = Jenkins.getInstance();%ninstance.setAuthorizationStrategy(strategy);%ninstance.save();", importHudsonSecurity, strategy);
+		return executeScript(script);
 	}
 
 	public String getVersion() throws JenkinsServerException {

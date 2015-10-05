@@ -5,8 +5,11 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.springframework.http.MediaType;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -18,9 +21,17 @@ import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
 public class JenkinsClient {
 
 	private URI serverURI;
+	private String username;
+	private String password;
 
 	public JenkinsClient(URI serverURI) {
 		this.serverURI = serverURI;
+	}
+
+	public JenkinsClient(URI serverURI, String username, String password) {
+		this.serverURI = serverURI;
+		this.username = username;
+		this.password = password;
 	}
 
 	public HttpResponse<String> get(String path) throws JenkinsClientException {
@@ -48,7 +59,7 @@ public class JenkinsClient {
 	private HttpResponse<String> get(URIBuilder uriBuilder) throws JenkinsClientException {
 		try {
 			return Unirest.get(uriBuilder.build().toString())
-					.headers(createHeaders())
+					.headers(createHeaders(MediaType.APPLICATION_XML_VALUE))
 					.asString();
 		} catch (UnirestException | URISyntaxException exception) {
 			throw new JenkinsClientException(exception);
@@ -58,7 +69,7 @@ public class JenkinsClient {
 	private HttpResponse<String> post(URIBuilder uriBuilder, String requestBody) throws JenkinsClientException {
 		try {
 			return Unirest.post(uriBuilder.build().toString())
-					.headers(createHeaders())
+					.headers(createHeaders(MediaType.APPLICATION_XML_VALUE))
 					.body(requestBody)
 					.asString();
 		} catch (UnirestException | URISyntaxException exception) {
@@ -68,11 +79,8 @@ public class JenkinsClient {
 
 	public HttpResponse<String> postURLEncoded(String path, String requestBody) throws JenkinsClientException {
 		try {
-			String contentType = ConfigurationUtil.getConfiguration("CONTENT_TYPE");
-			String applicationUrlencoded = ConfigurationUtil.getConfiguration("APPLICATION_X_WWW_FORM_URLENCODED");
-
 			return Unirest.post(createURI(path).build().toString())
-					.header(contentType, applicationUrlencoded)
+					.headers(createHeaders(MediaType.APPLICATION_FORM_URLENCODED_VALUE))
 					.body(requestBody)
 					.asString();
 		} catch (UnirestException | URISyntaxException exception) {
@@ -95,12 +103,18 @@ public class JenkinsClient {
 		return uriBuilder;
 	}
 
-	private Map<String, String> createHeaders() {
+	private Map<String, String> createHeaders(String contentTypeValue) {
 		String contentType = ConfigurationUtil.getConfiguration("CONTENT_TYPE");
-		String applicationXML = ConfigurationUtil.getConfiguration("APPLICATION_XML");
 
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(contentType, applicationXML);
+		headers.put(contentType, contentTypeValue);
+		
+		if (StringUtils.isNotEmpty(username)) {
+			String authorization = ConfigurationUtil.getConfiguration("AUTHORIZATION");
+			String authValue = "Basic " + new String(Base64.encodeBase64(String.format("%s:%s", username, password).getBytes()));
+			
+			headers.put(authorization, authValue);
+		}
 
 		return headers;
 	}

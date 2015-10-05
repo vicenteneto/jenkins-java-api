@@ -13,5 +13,4 @@ public enum ItemType {
 	public String getValue() {
 		return value;
 	}
-
 }

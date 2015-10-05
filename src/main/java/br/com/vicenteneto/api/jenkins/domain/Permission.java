@@ -1,6 +1,7 @@
 package br.com.vicenteneto.api.jenkins.domain;
 
 public enum Permission {
+
 	HUDSON_ADMINISTER("hudson.model.Hudson.Administer"),
 	HUDSON_CONFIGURE_UPDATE_CENTER("hudson.model.Hudson.ConfigureUpdateCenter"),
 	HUDSON_READ("hudson.model.Hudson.Read"),
