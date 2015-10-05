@@ -126,6 +126,21 @@ public class JenkinsServer {
 		}
 	}
 	
+	public HttpResponse<String> addJobToView(String viewName, String jobName) throws JenkinsServerException {
+		if (checkViewExists(viewName)) {
+			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("VIEW_DOES_NOT_EXISTS"), viewName));
+		}
+		if (checkJobExists(jobName)) {
+			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
+		}
+		try {
+			createJob(jobName);
+			return executeScript(String.format("Jenkins.getInstance().getView('%s').add(Jenkins.getInstance().getItem('%s'));", viewName, jobName));
+		} catch(JenkinsServerException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
+	
 	public HttpResponse<String> executeScript(String script) throws JenkinsServerException {
 		try {
 			return jenkinsClient.postURLEncoded(Constants.URL_SCRIPT_TEXT, ConfigurationUtil.getConfiguration("SCRIPT") + script);
