@@ -2,7 +2,6 @@ package br.com.vicenteneto.api.jenkins;
 
 import java.net.URI;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.mashape.unirest.http.HttpResponse;
@@ -65,20 +64,16 @@ public class JenkinsServer {
 	}
 
 	public ListView getViewByName(String viewName) throws JenkinsServerException {
-		if (StringUtils.isEmpty(executeScript(String.format("println(Jenkins.instance.getView('%s').name)", viewName)).getBody())) {
+		if (!checkViewExists(viewName)) {
 			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("VIEW_DOES_NOT_EXISTS"), viewName));
 		}
 		
 		return new ListView(viewName);
 	}
 
-	public boolean checkViewExists(String viewName) {
-		try {
-			getViewByName(viewName);
-			return true;
-		} catch (JenkinsServerException exception) {
-			return false;
-		}
+	public boolean checkViewExists(String viewName) throws JenkinsServerException {
+		String response = executeScript(String.format("println(Jenkins.instance.getView('%s') != null)", viewName)).getBody();
+		return Boolean.parseBoolean(response.trim());
 	}
 
 	public void createView(String viewName) throws JenkinsServerException {
@@ -87,14 +82,14 @@ public class JenkinsServer {
 		}
 		
 		executeScript(String.format("Jenkins.instance.addView(new ListView('%s'))", viewName));
-		
+
 		if (!checkViewExists(viewName)) {
 			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("ERROR_CREATING_VIEW"), viewName));
 		}
 	}
 
 	public Job getJobByName(String jobName) throws JenkinsServerException {
-		if (StringUtils.isEmpty(executeScript(String.format("println(Jenkins.instance.getItem('%s').name)", jobName)).getBody())) {
+		if (!checkJobExists(jobName)) {
 			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 		
@@ -102,12 +97,8 @@ public class JenkinsServer {
 	}
 
 	public boolean checkJobExists(String jobName) throws JenkinsServerException {
-		try {
-			getJobByName(jobName);
-			return true;
-		} catch (JenkinsServerException exception) {
-			return false;
-		}
+		String response = executeScript(String.format("println(Jenkins.instance.getItem('%s') != null)", jobName)).getBody();
+		return Boolean.parseBoolean(response.trim());
 	}
 
 	public void createJob(String jobName) throws JenkinsServerException {
@@ -121,9 +112,9 @@ public class JenkinsServer {
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
-		
-		if (!checkViewExists(jobName)) {
-			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("ERROR_CREATING_VIEW"), jobName));
+
+		if (!checkJobExists(jobName)) {
+			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("ERROR_CREATING_JOB"), jobName));
 		}
 	}
 	
