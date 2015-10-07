@@ -39,14 +39,15 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 		script += "def authorization = new ProjectMatrixAuthorizationStrategy();\n";
 		
 		for (String sid : sids) {
-			String userPermission = "def " + sid + "Permissions = [\n";
+			String defName = sid.replace("-", "_");
+			String userPermission = "def " + defName + "Permissions = [\n";
 			
 			for (Permission permission : grantedPermissions.get(sid)) {
 				userPermission += "'" + permission.getValue() + "',\n";
 			}
 			
 			userPermission += "];\n";
-			userPermission += "def " + sid + " = BuildPermission.buildNewAccessList('" + sid + "', " + sid + "Permissions);\n";
+			userPermission += "def " + defName + " = BuildPermission.buildNewAccessList('" + sid + "', " + sid + "Permissions);\n";
 			userPermission += sid + ".each { p, u -> strategy.add(p, u) };\n";
 			script += userPermission;
 		}
