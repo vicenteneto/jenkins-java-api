@@ -47,8 +47,8 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 			}
 			
 			userPermission += "];\n";
-			userPermission += "def " + defName + " = BuildPermission.buildNewAccessList('" + sid + "', " + sid + "Permissions);\n";
-			userPermission += sid + ".each { p, u -> strategy.add(p, u) };\n";
+			userPermission += "def " + defName + " = BuildPermission.buildNewAccessList('" + sid + "', " + defName + "Permissions);\n";
+			userPermission += defName + ".each { p, u -> authorization.add(p, u) };\n";
 			script += userPermission;
 		}
 		

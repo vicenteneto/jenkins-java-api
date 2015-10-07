@@ -160,7 +160,7 @@ public class JenkinsServer {
 	private String createString(String... strings) {
 		StringBuilder strBuilder = new StringBuilder();
 		for (String str : strings) {
-			strBuilder.append(str);
+			strBuilder.append(str).append("\n");
 		}
 		return strBuilder.toString();
 	}
