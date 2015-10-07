@@ -35,6 +35,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.github.jitpack</groupId>
+			<artifactId>maven-simple</artifactId>
+			<version>0.1</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-api-mockito</artifactId>
 			<version>1.6.2</version>
@@ -161,5 +167,12 @@
 			</plugin>
 		</plugins>
 	</reporting>
+
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 
 </project>
