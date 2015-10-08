@@ -133,6 +133,33 @@ public class JenkinsServer {
 		}
 	}
 	
+	public void addUserToProjectMatrix(String jobName, String username) throws JenkinsServerException {
+		if (!checkJobExists(jobName)) {
+			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
+		}
+
+		try {
+			String importHudsonSecurity = ConfigurationUtil.getConfiguration("IMPORT_HUDSON_SECURITY");
+			String getUser = String.format(ConfigurationUtil.getConfiguration("JENKINS_GET_USER"), username);
+			String defAuthorizationMatrixProperty = String.format(ConfigurationUtil.getConfiguration("JENKINS_DEF_PROPERTY_NAME"), ConfigurationUtil.getConfiguration("JENKINS_AUTHORIZATION_MATRIX_PROPERTY"));
+			String jenkinsInstance = ConfigurationUtil.getConfiguration("JENKINS_INSTANCE");
+			String job = String.format(ConfigurationUtil.getConfiguration("JENKINS_GET_ITEM"), jobName);
+			String ifPropertyEqualsNull = ConfigurationUtil.getConfiguration("JENKINS_IF_PROPERTY_NULL");
+			String addAuthorizationMatrixProperty = ConfigurationUtil.getConfiguration("JENKINS_ADD_AUTHORIZATION_MATRIX_PROPERTY");
+			String closeSlash = ConfigurationUtil.getConfiguration("CLOSE_SLASH");
+			String authorizationMatrixProperty = ConfigurationUtil.getConfiguration("JENKINS_GET_AUTHORIZATION_MATRIX_PROPERTY");
+			String addPropertyBuild = String.format(ConfigurationUtil.getConfiguration("JENKINS_ADD_PROPERTY_ITEM_BUILD"), username);
+			String addPropertyDiscover = String.format(ConfigurationUtil.getConfiguration("JENKINS_ADD_PROPERTY_ITEM_DISCOVER"), username);
+			String addPropertyRead = String.format(ConfigurationUtil.getConfiguration("JENKINS_ADD_PROPERTY_ITEM_READ"), username);
+			String jobSave = ConfigurationUtil.getConfiguration("JOB_SAVE");
+			
+			executeScript(createString(importHudsonSecurity, getUser, defAuthorizationMatrixProperty, jenkinsInstance, job, ifPropertyEqualsNull,
+					addAuthorizationMatrixProperty, closeSlash, authorizationMatrixProperty, addPropertyBuild, addPropertyDiscover, addPropertyRead, jobSave));
+		} catch(JenkinsServerException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
+	
 	public HttpResponse<String> executeScript(String script) throws JenkinsServerException {
 		try {
 			return jenkinsClient.postURLEncoded(Constants.URL_SCRIPT_TEXT, ConfigurationUtil.getConfiguration("SCRIPT") + script);
