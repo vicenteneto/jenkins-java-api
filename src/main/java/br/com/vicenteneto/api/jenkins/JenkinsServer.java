@@ -41,11 +41,10 @@ public class JenkinsServer {
 
 	public String setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
 		String security = securityRealm.getGroovyScript();
-		String jenkinsInstance = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_INSTANCE");
 		String setSecurityRealm = ConfigurationUtil.getConfiguration("GROOVY_SET_SECURITY_REALM");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
-		return executeScript(concatenateStrings(security, jenkinsInstance, setSecurityRealm, jenkinsSave));
+		return executeScript(concatenateStrings(security, setSecurityRealm, jenkinsSave));
 	}
 
 	public String setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) throws JenkinsServerException {
@@ -55,11 +54,10 @@ public class JenkinsServer {
 		}
 		
 		String authorization = authorizationStrategy.getGroovyScript();
-		String jenkinsInstance = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_INSTANCE");
 		String setAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_SET_AUTHORIZATION_STRATEGY");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
-		return executeScript(concatenateStrings(authorization, jenkinsInstance, setAuthorizationStrategy, jenkinsSave));
+		return executeScript(concatenateStrings(authorization, setAuthorizationStrategy, jenkinsSave));
 	}
 
 	public String getVersion() throws JenkinsServerException {
@@ -100,6 +98,16 @@ public class JenkinsServer {
 		if (!checkViewExists(viewName)) {
 			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("ERROR_CREATING_VIEW"), viewName));
 		}
+	}
+
+	public void createView(String viewName, String description) throws JenkinsServerException {
+		createView(viewName);
+		
+		String view = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_VIEW"), viewName);
+		String setViewDescription = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_VIEW_DESCRIPTION"), description);
+		String viewSave = ConfigurationUtil.getConfiguration("GROOVY_VIEW_SAVE");
+
+		executeScript(concatenateStrings(view, setViewDescription, viewSave));
 	}
 
 	public Job getJobByName(String jobName) throws JenkinsServerException {
@@ -166,7 +174,6 @@ public class JenkinsServer {
 
 		try {
 			String propertyName = ConfigurationUtil.getConfiguration("GROOVY_DEF_AUTHORIZATION_MATRIX_PROPERTY");
-			String instance = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_INSTANCE");
 			String job = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_ITEM"), jobName);
 			String addAuthorizationMatrixProperty = ConfigurationUtil.getConfiguration("GROOVY_ADD_AUTHORIZATION_MATRIX_PROPERTY");
 			String property = ConfigurationUtil.getConfiguration("GROOVY_GET_PROPERTY");
@@ -177,7 +184,7 @@ public class JenkinsServer {
 				sbAddProperties.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_PROPERTY"), permission.getValue(), username));
 			}
 
-			executeScript(concatenateStrings(propertyName, instance, job, addAuthorizationMatrixProperty, property, sbAddProperties.toString(), jobSave));
+			executeScript(concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, sbAddProperties.toString(), jobSave));
 		} catch (JenkinsServerException exception) {
 			throw new JenkinsServerException(exception);
 		}
