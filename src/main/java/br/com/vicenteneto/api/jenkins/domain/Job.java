@@ -2,9 +2,6 @@ package br.com.vicenteneto.api.jenkins.domain;
 
 import java.util.List;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-
-@XStreamAlias("project")
 public class Job {
 
 	private String description;

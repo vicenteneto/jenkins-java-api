@@ -2,22 +2,19 @@ package br.com.vicenteneto.api.jenkins.domain.authorization;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import br.com.vicenteneto.api.jenkins.domain.Permission;
+import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
 
 public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy {
 
 	private final Map<String, Set<Permission>> grantedPermissions = new HashMap<String, Set<Permission>>();
-	private List<String> sids = new LinkedList<String>();
 
 	public void add(String sid, Permission permission) {
 		if (!grantedPermissions.containsKey(sid)) {
 			grantedPermissions.put(sid, new HashSet<Permission>());
-			sids.add(sid);
 		}
 		
 		Set<Permission> set = grantedPermissions.get(sid);
@@ -26,32 +23,16 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 
 	@Override
 	public String getGroovyScript() {
-		String script = "class BuildPermission {\n"
-					+ "static buildNewAccessList(userOrGroup, permissions) {\n"
-						+ "def newPermissionsMap = [:];\n"
-						+ "permissions.each {\n"
-							+ "newPermissionsMap.put(Permission.fromId(it), userOrGroup);\n"
-						+ "}\n"
-						+ "return newPermissionsMap;\n"
-					+ "}\n"
-				+ "}\n";
-
-		script += "def authorization = new ProjectMatrixAuthorizationStrategy();\n";
+		StringBuilder sbScript = new StringBuilder();
+		sbScript.append(ConfigurationUtil.getConfiguration("GROOVY_DEF_PROJECT_MATRIX_AUTHORIZATION_STRATEGY"));
 		
-		for (String sid : sids) {
-			String defName = sid.replace("-", "_");
-			String userPermission = "def " + defName + "Permissions = [\n";
-			
+		for (String sid : grantedPermissions.keySet()) {
 			for (Permission permission : grantedPermissions.get(sid)) {
-				userPermission += "'" + permission.getValue() + "',\n";
+				sbScript.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), permission.getValue(), sid));
 			}
-			
-			userPermission += "];\n";
-			userPermission += "def " + defName + " = BuildPermission.buildNewAccessList('" + sid + "', " + defName + "Permissions);\n";
-			userPermission += defName + ".each { p, u -> authorization.add(p, u) };\n";
-			script += userPermission;
 		}
+		sbScript.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), Permission.HUDSON_READ, ConfigurationUtil.getConfiguration("ANONYMOUS")));
 		
-		return script;
+		return sbScript.toString();
 	}
 }

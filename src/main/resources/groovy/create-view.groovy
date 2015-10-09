@@ -1,1 +1,0 @@
-Jenkins.instance.addView(new ListView("%s"));

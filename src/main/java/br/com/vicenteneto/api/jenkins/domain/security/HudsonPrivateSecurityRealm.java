@@ -1,5 +1,7 @@
 package br.com.vicenteneto.api.jenkins.domain.security;
 
+import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
+
 public class HudsonPrivateSecurityRealm implements SecurityRealm {
 
 	private boolean allowsSignUp;
@@ -18,6 +20,6 @@ public class HudsonPrivateSecurityRealm implements SecurityRealm {
 
 	@Override
 	public String getGroovyScript() {
-		return String.format("def security = new HudsonPrivateSecurityRealm(%b);", allowsSignUp);
+		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_HUDSON_PRIVATE_SECURITY_REALM"), allowsSignUp);
 	}
 }

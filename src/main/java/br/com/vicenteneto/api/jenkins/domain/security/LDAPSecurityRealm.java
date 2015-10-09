@@ -1,5 +1,7 @@
 package br.com.vicenteneto.api.jenkins.domain.security;
 
+import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
+
 public class LDAPSecurityRealm implements SecurityRealm {
 
 	private String server;
@@ -89,7 +91,7 @@ public class LDAPSecurityRealm implements SecurityRealm {
 
 	@Override
 	public String getGroovyScript() {
-		return String.format("def security = new LDAPSecurityRealm('%s', '%s', '%s', '%s', '%s', '%s', '%s', %b);",
+		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_LDAP_SECURITY_REALM"),
 				server, rootDN, userSearchBase, userSearch, groupSearchBase, managerDN, managerPassword, inhibitInferRootDN);
 	}
 }
