@@ -15,7 +15,7 @@ public final class ConfigurationUtil {
 			return "!" + key + "!";
 		}
 	}
-	
+
 	private ConfigurationUtil() { }
 
 }
