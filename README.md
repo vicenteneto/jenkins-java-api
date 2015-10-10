@@ -1,4 +1,8 @@
-# jenkins-java-api
+# Jenkins Java API Wrapper
+
+A wrapper for the Jenkins API written in Java.
+
+## Usage
 
 To use it in your Maven build add:
 ```xml
@@ -15,9 +19,29 @@ and the dependency:
 ```xml
   <dependencies>
     <dependency>
-      <groupId>com.github.jitpack</groupId>
-      <artifactId>maven-simple</artifactId>
-      <version>0.1</version>
+      <groupId>com.github.vicenteneto</groupId>
+      <artifactId>jenkins-java-api</artifactId>
+      <version>0.0.1.8</version>
     </dependency>
   </dependencies>
+```
+
+## Examples
+
+### Get Version
+```java
+String version = jenkinsServer.getVersion()
+```
+
+### Get a ListView by a given name
+```java
+ListView listView = jenkinsServer.getViewByName("viewName");
+```
+
+### Create a ListView
+```java
+jenkinsServer.createView("viewName");
+
+// Create a Jenkins view with name and description
+jenkinsServer.createView("viewName", "viewDescription");
 ```
