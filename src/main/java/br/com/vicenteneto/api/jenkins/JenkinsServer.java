@@ -12,6 +12,7 @@ import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
 import br.com.vicenteneto.api.jenkins.domain.Job;
 import br.com.vicenteneto.api.jenkins.domain.ListView;
 import br.com.vicenteneto.api.jenkins.domain.Permission;
+import br.com.vicenteneto.api.jenkins.domain.Plugin;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
 import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
@@ -62,6 +63,46 @@ public class JenkinsServer {
 
 	public String getVersion() throws JenkinsServerException {
 		return executeScript(ConfigurationUtil.getConfiguration("GROOVY_GET_VERSION"));
+	}
+	
+	// Port - 0 to indicate random available TCP port. -1 to disable this service.
+	public void setSlaveAgentPort(int port) throws JenkinsServerException {
+		String setSlaveAgentPort = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_SLAVE_AGENT_PORT"), port);
+		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
+		
+		executeScript(concatenateStrings(setSlaveAgentPort, jenkinsSave));
+	}
+	
+	public Plugin getPluginByName(String pluginName) throws JenkinsServerException {
+		try {
+			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_PLUGIN"), pluginName);
+			HttpResponse<String> httpResponse = jenkinsClient.get(url);
+
+			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
+				throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_FOUND"), pluginName));
+			}
+
+			return gson.fromJson(httpResponse.getBody(), Plugin.class);
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
+	
+	public boolean checkPluginExists(String pluginName) {
+		try {
+			getPluginByName(pluginName);
+			return true;
+		} catch (JenkinsServerException exception) {
+			return false;
+		}
+	}
+	
+	public void installPluginByName(String pluginName, boolean dynamicLoad) throws JenkinsServerException {
+		if (!checkPluginExists(pluginName)) {
+			throw new JenkinsServerException(String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_FOUND"), pluginName));
+		}
+
+		executeScript(String.format(ConfigurationUtil.getConfiguration("GROOVY_DEPLOY_PLUGIN"), pluginName, dynamicLoad));
 	}
 
 	public ListView getViewByName(String viewName) throws JenkinsServerException {
