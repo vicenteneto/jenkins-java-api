@@ -28,9 +28,17 @@ and the dependency:
 
 ## Examples
 
+### Jenkins Server
+```java
+JenkinsServer jenkinsServer = new JenkinsServer(new URI("http://0.0.0.0/jenkins"));
+
+// If your Jenkins server uses any kind of security
+JenkinsServer jenkinsServer = new JenkinsServer(new URI("http://0.0.0.0/jenkins"), "username", "password");
+```
+
 ### Get Version
 ```java
-String version = jenkinsServer.getVersion()
+String version = jenkinsServer.getVersion();
 ```
 
 ### Get a ListView by a given name
