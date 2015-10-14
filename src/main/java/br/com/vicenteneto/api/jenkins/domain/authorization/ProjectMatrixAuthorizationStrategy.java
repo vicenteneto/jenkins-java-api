@@ -31,7 +31,6 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 				sbScript.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), permission.getValue(), sid));
 			}
 		}
-		sbScript.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), Permission.HUDSON_READ, ConfigurationUtil.getConfiguration("ANONYMOUS")));
 		
 		return sbScript.toString();
 	}
