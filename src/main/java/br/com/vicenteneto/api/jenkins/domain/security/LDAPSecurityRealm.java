@@ -9,17 +9,22 @@ public class LDAPSecurityRealm implements SecurityRealm {
 	private String userSearchBase;
 	private String userSearch;
 	private String groupSearchBase;
+	private String groupSearchFilter;
+	private String groupMembershipFilter;
 	private String managerDN;
 	private String managerPassword;
 	private boolean inhibitInferRootDN;
 
 	public LDAPSecurityRealm(String server, String rootDN, String userSearchBase, String userSearch,
-			String groupSearchBase, String managerDN, String managerPassword, boolean inhibitInferRootDN) {
+			String groupSearchBase, String groupSearchFilter, String groupMembershipFilter, String managerDN,
+			String managerPassword, boolean inhibitInferRootDN) {
 		this.server = server;
 		this.rootDN = rootDN;
 		this.userSearchBase = userSearchBase;
 		this.userSearch = userSearch;
 		this.groupSearchBase = groupSearchBase;
+		this.groupSearchFilter = groupSearchFilter;
+		this.groupMembershipFilter = groupMembershipFilter;
 		this.managerDN = managerDN;
 		this.managerPassword = managerPassword;
 		this.inhibitInferRootDN = inhibitInferRootDN;
@@ -65,6 +70,22 @@ public class LDAPSecurityRealm implements SecurityRealm {
 		this.groupSearchBase = groupSearchBase;
 	}
 
+	public String getGroupSearchFilter() {
+		return groupSearchFilter;
+	}
+
+	public void setGroupSearchFilter(String groupSearchFilter) {
+		this.groupSearchFilter = groupSearchFilter;
+	}
+
+	public String getGroupMembershipFilter() {
+		return groupMembershipFilter;
+	}
+
+	public void setGroupMembershiphFilter(String groupMembershipFilter) {
+		this.groupMembershipFilter = groupMembershipFilter;
+	}
+
 	public String getManagerDN() {
 		return managerDN;
 	}
@@ -91,7 +112,8 @@ public class LDAPSecurityRealm implements SecurityRealm {
 
 	@Override
 	public String getGroovyScript() {
-		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_LDAP_SECURITY_REALM"),
-				server, rootDN, userSearchBase, userSearch, groupSearchBase, managerDN, managerPassword, inhibitInferRootDN);
+		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_LDAP_SECURITY_REALM"), server, rootDN,
+				userSearchBase, userSearch, groupSearchBase, groupSearchFilter, groupMembershipFilter, managerDN,
+				managerPassword, inhibitInferRootDN);
 	}
 }
