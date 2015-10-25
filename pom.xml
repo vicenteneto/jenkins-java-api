@@ -34,6 +34,8 @@
 			<version>1.6.2</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- Tests -->
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
