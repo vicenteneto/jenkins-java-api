@@ -28,14 +28,13 @@
 			<version>4.2.1.RELEASE</version>
 		</dependency>
 
+		<!-- Tests -->
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-api-mockito</artifactId>
 			<version>1.6.2</version>
 			<scope>test</scope>
 		</dependency>
-		
-		<!-- Tests -->
 		<dependency>
 			<groupId>org.powermock</groupId>
 			<artifactId>powermock-module-junit4</artifactId>
@@ -49,13 +48,12 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Unirest dependencies -->
 		<dependency>
 			<groupId>com.mashape.unirest</groupId>
 			<artifactId>unirest-java</artifactId>
 			<version>1.4.7</version>
 		</dependency>
-
-		<!-- Unirest dependencies -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
