@@ -16,7 +16,7 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 		if (!grantedPermissions.containsKey(sid)) {
 			grantedPermissions.put(sid, new HashSet<Permission>());
 		}
-		
+
 		Set<Permission> set = grantedPermissions.get(sid);
 		set.add(permission);
 	}
@@ -25,13 +25,14 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 	public String getGroovyScript() {
 		StringBuilder sbScript = new StringBuilder();
 		sbScript.append(ConfigurationUtil.getConfiguration("GROOVY_DEF_PROJECT_MATRIX_AUTHORIZATION_STRATEGY"));
-		
+
 		for (String sid : grantedPermissions.keySet()) {
 			for (Permission permission : grantedPermissions.get(sid)) {
-				sbScript.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), permission.getValue(), sid));
+				sbScript.append(
+						String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), permission.getValue(), sid));
 			}
 		}
-		
+
 		return sbScript.toString();
 	}
 }
