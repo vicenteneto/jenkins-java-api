@@ -21,7 +21,7 @@ and the dependency:
     <dependency>
       <groupId>com.github.vicenteneto</groupId>
       <artifactId>jenkins-java-api</artifactId>
-      <version>0.0.1.8</version>
+      <version>1.11.19</version>
     </dependency>
   </dependencies>
 ```
