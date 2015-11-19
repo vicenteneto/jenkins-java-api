@@ -1,7 +1,5 @@
 package br.com.vicenteneto.api.jenkins.domain.security;
 
-import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
-
 public class LDAPSecurityRealm implements SecurityRealm {
 
 	private String server;
@@ -102,18 +100,11 @@ public class LDAPSecurityRealm implements SecurityRealm {
 		this.managerPassword = managerPassword;
 	}
 
-	public boolean getInhibitInferRootDN() {
+	public boolean isInhibitInferRootDN() {
 		return inhibitInferRootDN;
 	}
 
 	public void setInhibitInferRootDN(boolean inhibitInferRootDN) {
 		this.inhibitInferRootDN = inhibitInferRootDN;
-	}
-
-	@Override
-	public String getGroovyScript() {
-		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_LDAP_SECURITY_REALM"), server, rootDN,
-				userSearchBase, userSearch, groupSearchBase, groupSearchFilter, groupMembershipFilter, managerDN,
-				managerPassword, inhibitInferRootDN);
 	}
 }
