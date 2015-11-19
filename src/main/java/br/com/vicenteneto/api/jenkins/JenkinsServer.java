@@ -14,11 +14,10 @@ import br.com.vicenteneto.api.jenkins.domain.ListView;
 import br.com.vicenteneto.api.jenkins.domain.Permission;
 import br.com.vicenteneto.api.jenkins.domain.Plugin;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
-import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategyUtil;
 import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
-import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealmUtil;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
+import br.com.vicenteneto.api.jenkins.util.GroovyUtil;
 import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
 
 public class JenkinsServer {
@@ -43,7 +42,7 @@ public class JenkinsServer {
 	}
 
 	public String setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
-		String security = SecurityRealmUtil.generateGroovyScript(securityRealm);
+		String security = GroovyUtil.generateGroovyScript(securityRealm);
 		String setSecurityRealm = ConfigurationUtil.getConfiguration("GROOVY_SET_SECURITY_REALM");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
@@ -56,7 +55,7 @@ public class JenkinsServer {
 			throw new JenkinsServerException(ConfigurationUtil.getConfiguration("SECURITY_REALM_IS_NOT_CONFIGURED"));
 		}
 
-		String authorization = AuthorizationStrategyUtil.generateGroovyScript(authorizationStrategy);
+		String authorization = GroovyUtil.generateGroovyScript(authorizationStrategy);
 		String setAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_SET_AUTHORIZATION_STRATEGY");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
