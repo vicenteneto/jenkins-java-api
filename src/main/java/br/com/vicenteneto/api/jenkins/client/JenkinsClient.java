@@ -54,7 +54,7 @@ public class JenkinsClient {
 	private HttpResponse<String> get(URIBuilder uriBuilder) throws JenkinsClientException {
 		try {
 			GetRequest getRequest = Unirest.get(uriBuilder.build().toString());
-			
+
 			return auth(getRequest)
 					.header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), MediaType.APPLICATION_XML_VALUE)
 					.asString();
@@ -63,10 +63,11 @@ public class JenkinsClient {
 		}
 	}
 
-	private HttpResponse<String> post(URIBuilder uriBuilder, String requestBody, String mediaType) throws JenkinsClientException {
+	private HttpResponse<String> post(URIBuilder uriBuilder, String requestBody, String mediaType)
+			throws JenkinsClientException {
 		try {
 			HttpRequestWithBody post = Unirest.post(uriBuilder.build().toString());
-			
+
 			return ((HttpRequestWithBody) auth(post)
 					.header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), mediaType))
 					.body(requestBody)
@@ -88,7 +89,7 @@ public class JenkinsClient {
 		if (StringUtils.hasText(username)) {
 			return request.basicAuth(username, password);
 		}
-		
+
 		return request;
 	}
 }
