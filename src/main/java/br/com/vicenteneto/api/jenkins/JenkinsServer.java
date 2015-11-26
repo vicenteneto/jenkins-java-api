@@ -22,7 +22,7 @@ import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
 
 public class JenkinsServer {
 
-	private static final String FALSE = ConfigurationUtil.getConfiguration("FALSE");
+	private static final String FALSE = "false";
 
 	private JenkinsClient jenkinsClient;
 	private Gson gson;
@@ -41,16 +41,20 @@ public class JenkinsServer {
 		jenkinsClient = new JenkinsClient(serverURI, username, password);
 	}
 
-	public String setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
+	public String getVersion() throws JenkinsServerException {
+		return executeScript(ConfigurationUtil.getConfiguration("GROOVY_GET_VERSION"));
+	}
+
+	public void setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
 
 		String security = GroovyUtil.generateGroovyScript(securityRealm);
 		String setSecurityRealm = ConfigurationUtil.getConfiguration("GROOVY_SET_SECURITY_REALM");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
-		return executeScript(concatenateStrings(security, setSecurityRealm, jenkinsSave));
+		executeScript(concatenateStrings(security, setSecurityRealm, jenkinsSave));
 	}
 
-	public String setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) throws JenkinsServerException {
+	public void setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) throws JenkinsServerException {
 
 		String response = executeScript(ConfigurationUtil.getConfiguration("GROOVY_IS_USE_SECURITY"));
 		if (response.trim().equals(FALSE)) {
@@ -61,11 +65,7 @@ public class JenkinsServer {
 		String setAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_SET_AUTHORIZATION_STRATEGY");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
-		return executeScript(concatenateStrings(authorization, setAuthorizationStrategy, jenkinsSave));
-	}
-
-	public String getVersion() throws JenkinsServerException {
-		return executeScript(ConfigurationUtil.getConfiguration("GROOVY_GET_VERSION"));
+		executeScript(concatenateStrings(authorization, setAuthorizationStrategy, jenkinsSave));
 	}
 
 	// Port - 0 to indicate random available TCP port. -1 to disable this service.
