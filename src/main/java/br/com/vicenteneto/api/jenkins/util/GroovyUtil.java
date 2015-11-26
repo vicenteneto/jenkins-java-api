@@ -78,4 +78,6 @@ public final class GroovyUtil {
 
 		return sbScript.toString();
 	}
+
+	private GroovyUtil() { }
 }
