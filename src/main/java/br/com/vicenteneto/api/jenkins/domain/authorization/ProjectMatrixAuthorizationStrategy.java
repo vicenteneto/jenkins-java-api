@@ -16,6 +16,7 @@ public class ProjectMatrixAuthorizationStrategy implements AuthorizationStrategy
 	}
 
 	public void add(String sid, Permission permission) {
+
 		if (!grantedPermissions.containsKey(sid)) {
 			grantedPermissions.put(sid, new HashSet<Permission>());
 		}

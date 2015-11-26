@@ -42,6 +42,7 @@ public class JenkinsServer {
 	}
 
 	public String setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
+
 		String security = GroovyUtil.generateGroovyScript(securityRealm);
 		String setSecurityRealm = ConfigurationUtil.getConfiguration("GROOVY_SET_SECURITY_REALM");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
@@ -50,6 +51,7 @@ public class JenkinsServer {
 	}
 
 	public String setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) throws JenkinsServerException {
+
 		String response = executeScript(ConfigurationUtil.getConfiguration("GROOVY_IS_USE_SECURITY"));
 		if (response.trim().equals(FALSE)) {
 			throw new JenkinsServerException(ConfigurationUtil.getConfiguration("SECURITY_REALM_IS_NOT_CONFIGURED"));
@@ -66,9 +68,9 @@ public class JenkinsServer {
 		return executeScript(ConfigurationUtil.getConfiguration("GROOVY_GET_VERSION"));
 	}
 
-	// Port - 0 to indicate random available TCP port. -1 to disable this
-	// service.
+	// Port - 0 to indicate random available TCP port. -1 to disable this service.
 	public void setSlaveAgentPort(int port) throws JenkinsServerException {
+
 		String setSlaveAgentPort = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_SLAVE_AGENT_PORT"), port);
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
@@ -76,6 +78,7 @@ public class JenkinsServer {
 	}
 
 	public Plugin getPluginByName(String pluginName) throws JenkinsServerException {
+
 		try {
 			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_PLUGIN"), pluginName);
 			HttpResponse<String> httpResponse = jenkinsClient.get(url);
@@ -92,6 +95,7 @@ public class JenkinsServer {
 	}
 
 	public boolean checkPluginExists(String pluginName) {
+
 		try {
 			getPluginByName(pluginName);
 			return true;
@@ -101,6 +105,7 @@ public class JenkinsServer {
 	}
 
 	public void installPluginByName(String pluginName, boolean dynamicLoad) throws JenkinsServerException {
+
 		if (!checkPluginExists(pluginName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_FOUND"), pluginName));
@@ -111,6 +116,7 @@ public class JenkinsServer {
 	}
 
 	public ListView getViewByName(String viewName) throws JenkinsServerException {
+
 		try {
 			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_VIEW"), viewName);
 			HttpResponse<String> httpResponse = jenkinsClient.get(url);
@@ -127,6 +133,7 @@ public class JenkinsServer {
 	}
 
 	public boolean checkViewExists(String viewName) {
+
 		try {
 			getViewByName(viewName);
 			return true;
@@ -136,6 +143,7 @@ public class JenkinsServer {
 	}
 
 	public void createView(String viewName) throws JenkinsServerException {
+
 		if (checkViewExists(viewName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("VIEW_ALREADY_EXISTS"), viewName));
@@ -150,6 +158,7 @@ public class JenkinsServer {
 	}
 
 	public void createView(String viewName, String description) throws JenkinsServerException {
+
 		createView(viewName);
 
 		String view = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_VIEW"), viewName);
@@ -160,6 +169,7 @@ public class JenkinsServer {
 	}
 
 	public void deleteView(String viewName) throws JenkinsServerException {
+
 		if (!checkViewExists(viewName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("VIEW_DOES_NOT_EXISTS"), viewName));
@@ -174,6 +184,7 @@ public class JenkinsServer {
 	}
 
 	public Job getJobByName(String jobName) throws JenkinsServerException {
+
 		try {
 			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_JOB"), jobName);
 			HttpResponse<String> httpResponse = jenkinsClient.get(url);
@@ -190,6 +201,7 @@ public class JenkinsServer {
 	}
 
 	public boolean checkJobExists(String jobName) {
+
 		try {
 			getJobByName(jobName);
 			return true;
@@ -199,6 +211,7 @@ public class JenkinsServer {
 	}
 
 	public void createJob(String jobName) throws JenkinsServerException {
+
 		if (checkJobExists(jobName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("JOB_ALREADY_EXISTS"), jobName));
@@ -213,6 +226,7 @@ public class JenkinsServer {
 	}
 
 	public void deleteJob(String jobName) throws JenkinsServerException {
+
 		if (!checkJobExists(jobName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
@@ -227,6 +241,7 @@ public class JenkinsServer {
 	}
 
 	public void addJobToView(String viewName, String jobName) throws JenkinsServerException {
+
 		if (!checkViewExists(viewName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("VIEW_DOES_NOT_EXISTS"), viewName));
@@ -246,6 +261,7 @@ public class JenkinsServer {
 
 	public void addUserToProjectMatrix(String jobName, String username, List<Permission> permissions)
 			throws JenkinsServerException {
+
 		if (!checkJobExists(jobName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
@@ -277,6 +293,7 @@ public class JenkinsServer {
 	}
 
 	public void removeUserFromProjectMatrix(String jobName, String username) throws JenkinsServerException {
+
 		if (!checkJobExists(jobName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
@@ -303,6 +320,7 @@ public class JenkinsServer {
 	}
 
 	private String executeScript(String script) throws JenkinsServerException {
+
 		try {
 			String postScript = String.format(ConfigurationUtil.getConfiguration("SCRIPT"), script);
 			HttpResponse<String> response = jenkinsClient
@@ -319,6 +337,7 @@ public class JenkinsServer {
 	}
 
 	private String concatenateStrings(String... strings) {
+
 		StringBuilder strBuilder = new StringBuilder();
 		for (String str : strings) {
 			strBuilder.append(str);
