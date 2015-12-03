@@ -4,7 +4,7 @@
 
 	<groupId>br.com.vicenteneto</groupId>
 	<artifactId>jenkins-java-api</artifactId>
-	<version>1.11.19</version>
+	<version>1.12.2</version>
 	<packaging>jar</packaging>
 
 	<name>jenkins-java-api</name>
@@ -88,7 +88,8 @@
 				</configuration>
 			</plugin>
 
-			<plugin>  <!-- Create sources.jar -->
+			<!-- Create sources.jar -->
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<executions>

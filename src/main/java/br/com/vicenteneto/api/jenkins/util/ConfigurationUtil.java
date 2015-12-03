@@ -9,6 +9,7 @@ public final class ConfigurationUtil {
 	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BASE_NAME);
 
 	public static String getConfiguration(String key) {
+
 		try {
 			return RESOURCE_BUNDLE.getString(key);
 		} catch (MissingResourceException exception) {
