@@ -1,5 +1,8 @@
 # Jenkins Java API Wrapper
 
+[![GitHub Release](https://img.shields.io/github/release/vicenteneto/jenkins-java-api.svg)](https://github.com/vicenteneto/jenkins-java-api/releases)
+[![Build Status](https://img.shields.io/travis/vicenteneto/jenkins-java-api/master.svg)](https://travis-ci.org/vicenteneto/jenkins-java-api)
+
 A wrapper for the Jenkins API written in Java.
 
 ## Usage
