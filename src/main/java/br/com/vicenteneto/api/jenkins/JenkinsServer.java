@@ -115,6 +115,12 @@ public class JenkinsServer {
 				String.format(ConfigurationUtil.getConfiguration("GROOVY_DEPLOY_PLUGIN"), pluginName, dynamicLoad));
 	}
 
+	public void updateAllInstalledPlugins(boolean dynamicLoad) throws JenkinsServerException {
+
+		executeScript(
+				String.format(ConfigurationUtil.getConfiguration("GROOVY_UPDATE_PLUGINS"), dynamicLoad));
+	}
+
 	public ListView getViewByName(String viewName) throws JenkinsServerException {
 
 		try {
@@ -251,12 +257,18 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		try {
-			executeScript(
-					String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_JOB_TO_VIEW"), viewName, jobName));
-		} catch (JenkinsServerException exception) {
-			throw new JenkinsServerException(exception);
+		executeScript(
+				String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_JOB_TO_VIEW"), viewName, jobName));
+	}
+
+	public void executeJob(String jobName) throws JenkinsServerException {
+		if (!checkJobExists(jobName)) {
+			throw new JenkinsServerException(
+					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
+
+		executeScript(
+				String.format(ConfigurationUtil.getConfiguration("GROOVY_RUN_JOB"), jobName));
 	}
 
 	public void addUserToProjectMatrix(String jobName, String username, List<Permission> permissions)
@@ -267,29 +279,27 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		String checkAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_IS_AUTHORIZATION_STRATEGY_EQUALS_PROJECT_MATRIX");
+		String checkAuthorizationStrategy = ConfigurationUtil
+				.getConfiguration("GROOVY_IS_AUTHORIZATION_STRATEGY_EQUALS_PROJECT_MATRIX");
 		String response = executeScript(checkAuthorizationStrategy);
 		if (response.trim().equals(FALSE)) {
 			throw new JenkinsServerException(ConfigurationUtil.getConfiguration("AUTHORIZATION_STRATEGY_ERROR"));
 		}
 
-		try {
-			String propertyName = ConfigurationUtil.getConfiguration("GROOVY_DEF_AUTHORIZATION_MATRIX_PROPERTY");
-			String job = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_ITEM"), jobName);
-			String addAuthorizationMatrixProperty = ConfigurationUtil.getConfiguration("GROOVY_ADD_AUTHORIZATION_MATRIX_PROPERTY");
-			String property = ConfigurationUtil.getConfiguration("GROOVY_GET_PROPERTY");
-			String jobSave = ConfigurationUtil.getConfiguration("GROOVY_JOB_SAVE");
+		String propertyName = ConfigurationUtil.getConfiguration("GROOVY_DEF_AUTHORIZATION_MATRIX_PROPERTY");
+		String job = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_ITEM"), jobName);
+		String addAuthorizationMatrixProperty = ConfigurationUtil.getConfiguration("GROOVY_ADD_AUTHORIZATION_MATRIX_PROPERTY");
+		String property = ConfigurationUtil.getConfiguration("GROOVY_GET_PROPERTY");
+		String jobSave = ConfigurationUtil.getConfiguration("GROOVY_JOB_SAVE");
 
-			StringBuilder sbAddProperties = new StringBuilder();
-			for (Permission permission : permissions) {
-				sbAddProperties
-						.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_PROPERTY"), permission.getValue(), username));
-			}
-
-			executeScript(concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, sbAddProperties.toString(), jobSave));
-		} catch (JenkinsServerException exception) {
-			throw new JenkinsServerException(exception);
+		StringBuilder sbAddProperties = new StringBuilder();
+		for (Permission permission : permissions) {
+			sbAddProperties.append(
+					String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_PROPERTY"), permission.getValue(), username));
 		}
+
+		executeScript(
+				concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, sbAddProperties.toString(), jobSave));
 	}
 
 	public void removeUserFromProjectMatrix(String jobName, String username) throws JenkinsServerException {
@@ -305,26 +315,21 @@ public class JenkinsServer {
 			throw new JenkinsServerException(ConfigurationUtil.getConfiguration("AUTHORIZATION_STRATEGY_ERROR"));
 		}
 
-		try {
-			String propertyName = ConfigurationUtil.getConfiguration("GROOVY_DEF_AUTHORIZATION_MATRIX_PROPERTY");
-			String job = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_ITEM"), jobName);
-			String addAuthorizationMatrixProperty = ConfigurationUtil.getConfiguration("GROOVY_ADD_AUTHORIZATION_MATRIX_PROPERTY");
-			String property = ConfigurationUtil.getConfiguration("GROOVY_GET_PROPERTY");
-			String removeUserPermissions = String.format(ConfigurationUtil.getConfiguration("GROOVY_REMOVE_USER_FROM_GRANTED_PERMISSIONS"), username);
-			String jobSave = ConfigurationUtil.getConfiguration("GROOVY_JOB_SAVE");
+		String propertyName = ConfigurationUtil.getConfiguration("GROOVY_DEF_AUTHORIZATION_MATRIX_PROPERTY");
+		String job = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_ITEM"), jobName);
+		String addAuthorizationMatrixProperty = ConfigurationUtil.getConfiguration("GROOVY_ADD_AUTHORIZATION_MATRIX_PROPERTY");
+		String property = ConfigurationUtil.getConfiguration("GROOVY_GET_PROPERTY");
+		String removeUserPermissions = String.format(ConfigurationUtil.getConfiguration("GROOVY_REMOVE_USER_FROM_GRANTED_PERMISSIONS"), username);
+		String jobSave = ConfigurationUtil.getConfiguration("GROOVY_JOB_SAVE");
 
-			executeScript(concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, removeUserPermissions, jobSave));
-		} catch (JenkinsServerException exception) {
-			throw new JenkinsServerException(exception);
-		}
+		executeScript(concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, removeUserPermissions, jobSave));
 	}
 
 	private String executeScript(String script) throws JenkinsServerException {
 
 		try {
 			String postScript = String.format(ConfigurationUtil.getConfiguration("SCRIPT"), script);
-			HttpResponse<String> response = jenkinsClient
-					.postURLEncoded(ConfigurationUtil.getConfiguration("URL_SCRIPT_TEXT"), postScript);
+			HttpResponse<String> response = jenkinsClient.postURLEncoded(ConfigurationUtil.getConfiguration("URL_SCRIPT_TEXT"), postScript);
 
 			if (response.getStatus() == HttpStatus.SC_FORBIDDEN) {
 				throw new JenkinsServerException(ConfigurationUtil.getConfiguration("FORBIDDEN_ERROR"));

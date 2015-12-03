@@ -65,7 +65,8 @@ public final class GroovyUtil {
 		return ConfigurationUtil.getConfiguration("GROOVY_DEF_UNSECURED_AUTHORIZATION_STRATEGY");
 	}
 
-	private static String generateProjectMatrixInAuthorizationStrategy(ProjectMatrixAuthorizationStrategy authorization) {
+	private static String generateProjectMatrixInAuthorizationStrategy(
+			ProjectMatrixAuthorizationStrategy authorization) {
 
 		StringBuilder sbScript = new StringBuilder();
 		sbScript.append(ConfigurationUtil.getConfiguration("GROOVY_DEF_PROJECT_MATRIX_AUTHORIZATION_STRATEGY"));
