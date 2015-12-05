@@ -42,7 +42,7 @@ public class JenkinsServer {
 	}
 
 	public String getVersion() throws JenkinsServerException {
-		return executeScript(ConfigurationUtil.getConfiguration("GROOVY_GET_VERSION"));
+		return GroovyUtil.executeScript(jenkinsClient, ConfigurationUtil.getConfiguration("GROOVY_GET_VERSION"));
 	}
 
 	public void setSecurityRealm(SecurityRealm securityRealm) throws JenkinsServerException {
@@ -51,12 +51,13 @@ public class JenkinsServer {
 		String setSecurityRealm = ConfigurationUtil.getConfiguration("GROOVY_SET_SECURITY_REALM");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
-		executeScript(concatenateStrings(security, setSecurityRealm, jenkinsSave));
+		String script = GroovyUtil.concatenateStrings(security, setSecurityRealm, jenkinsSave);
+		GroovyUtil.executeScript(jenkinsClient, script);
 	}
 
 	public void setAuthorizationStrategy(AuthorizationStrategy authorizationStrategy) throws JenkinsServerException {
 
-		String response = executeScript(ConfigurationUtil.getConfiguration("GROOVY_IS_USE_SECURITY"));
+		String response = GroovyUtil.executeScript(jenkinsClient, ConfigurationUtil.getConfiguration("GROOVY_IS_USE_SECURITY"));
 		if (response.trim().equals(FALSE)) {
 			throw new JenkinsServerException(ConfigurationUtil.getConfiguration("SECURITY_REALM_IS_NOT_CONFIGURED"));
 		}
@@ -65,7 +66,8 @@ public class JenkinsServer {
 		String setAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_SET_AUTHORIZATION_STRATEGY");
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
-		executeScript(concatenateStrings(authorization, setAuthorizationStrategy, jenkinsSave));
+		String script = GroovyUtil.concatenateStrings(authorization, setAuthorizationStrategy, jenkinsSave);
+		GroovyUtil.executeScript(jenkinsClient, script);
 	}
 
 	// Port - 0 to indicate random available TCP port. -1 to disable this service.
@@ -74,7 +76,8 @@ public class JenkinsServer {
 		String setSlaveAgentPort = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_SLAVE_AGENT_PORT"), port);
 		String jenkinsSave = ConfigurationUtil.getConfiguration("GROOVY_JENKINS_SAVE");
 
-		executeScript(concatenateStrings(setSlaveAgentPort, jenkinsSave));
+		String script = GroovyUtil.concatenateStrings(setSlaveAgentPort, jenkinsSave);
+		GroovyUtil.executeScript(jenkinsClient, script);
 	}
 
 	public Plugin getPluginByName(String pluginName) throws JenkinsServerException {
@@ -111,14 +114,14 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_FOUND"), pluginName));
 		}
 
-		executeScript(
-				String.format(ConfigurationUtil.getConfiguration("GROOVY_DEPLOY_PLUGIN"), pluginName, dynamicLoad));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_DEPLOY_PLUGIN");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, pluginName, dynamicLoad));
 	}
 
 	public void updateAllInstalledPlugins(boolean dynamicLoad) throws JenkinsServerException {
 
-		executeScript(
-				String.format(ConfigurationUtil.getConfiguration("GROOVY_UPDATE_PLUGINS"), dynamicLoad));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_UPDATE_PLUGINS");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, dynamicLoad));
 	}
 
 	public ListView getViewByName(String viewName) throws JenkinsServerException {
@@ -155,7 +158,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("VIEW_ALREADY_EXISTS"), viewName));
 		}
 
-		executeScript(String.format(ConfigurationUtil.getConfiguration("GROOVY_CREATE_LIST_VIEW"), viewName));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_CREATE_LIST_VIEW");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, viewName));
 
 		if (!checkViewExists(viewName)) {
 			throw new JenkinsServerException(
@@ -171,7 +175,8 @@ public class JenkinsServer {
 		String setViewDescription = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_VIEW_DESCRIPTION"), description);
 		String viewSave = ConfigurationUtil.getConfiguration("GROOVY_VIEW_SAVE");
 
-		executeScript(concatenateStrings(view, setViewDescription, viewSave));
+		String script = GroovyUtil.concatenateStrings(view, setViewDescription, viewSave);
+		GroovyUtil.executeScript(jenkinsClient, script);
 	}
 
 	public void deleteView(String viewName) throws JenkinsServerException {
@@ -181,7 +186,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("VIEW_DOES_NOT_EXISTS"), viewName));
 		}
 
-		executeScript(String.format(ConfigurationUtil.getConfiguration("GROOVY_DELETE_VIEW"), viewName));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_DELETE_VIEW");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, viewName));
 
 		if (checkViewExists(viewName)) {
 			throw new JenkinsServerException(
@@ -223,7 +229,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_ALREADY_EXISTS"), jobName));
 		}
 
-		executeScript(String.format(ConfigurationUtil.getConfiguration("GROOVY_CREATE_FREE_STYLE_PROJECT"), jobName));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_CREATE_FREE_STYLE_PROJECT");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
 
 		if (!checkJobExists(jobName)) {
 			throw new JenkinsServerException(
@@ -238,7 +245,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		executeScript(String.format(ConfigurationUtil.getConfiguration("GROOVY_DELETE_ITEM"), jobName));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_DELETE_ITEM");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
 
 		if (checkJobExists(jobName)) {
 			throw new JenkinsServerException(
@@ -257,8 +265,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		executeScript(
-				String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_JOB_TO_VIEW"), viewName, jobName));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_ADD_JOB_TO_VIEW");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, viewName, jobName));
 	}
 
 	public void executeJob(String jobName) throws JenkinsServerException {
@@ -267,8 +275,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		executeScript(
-				String.format(ConfigurationUtil.getConfiguration("GROOVY_RUN_JOB"), jobName));
+		String script = ConfigurationUtil.getConfiguration("GROOVY_RUN_JOB");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
 	}
 
 	public void addUserToProjectMatrix(String jobName, String username, List<Permission> permissions)
@@ -279,10 +287,7 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		String checkAuthorizationStrategy = ConfigurationUtil
-				.getConfiguration("GROOVY_IS_AUTHORIZATION_STRATEGY_EQUALS_PROJECT_MATRIX");
-		String response = executeScript(checkAuthorizationStrategy);
-		if (response.trim().equals(FALSE)) {
+		if (!checkAuthorizationStrategyIsProjectMatrix()) {
 			throw new JenkinsServerException(ConfigurationUtil.getConfiguration("AUTHORIZATION_STRATEGY_ERROR"));
 		}
 
@@ -294,12 +299,12 @@ public class JenkinsServer {
 
 		StringBuilder sbAddProperties = new StringBuilder();
 		for (Permission permission : permissions) {
-			sbAddProperties.append(
-					String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_PROPERTY"), permission.getValue(), username));
+			sbAddProperties
+					.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_PROPERTY"), permission.getValue(), username));
 		}
 
-		executeScript(
-				concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, sbAddProperties.toString(), jobSave));
+		String script = GroovyUtil.concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, sbAddProperties.toString(), jobSave);
+		GroovyUtil.executeScript(jenkinsClient, script);
 	}
 
 	public void removeUserFromProjectMatrix(String jobName, String username) throws JenkinsServerException {
@@ -309,9 +314,7 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		String checkAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_IS_AUTHORIZATION_STRATEGY_EQUALS_PROJECT_MATRIX");
-		String response = executeScript(checkAuthorizationStrategy);
-		if (response.trim().equals(FALSE)) {
+		if (!checkAuthorizationStrategyIsProjectMatrix()) {
 			throw new JenkinsServerException(ConfigurationUtil.getConfiguration("AUTHORIZATION_STRATEGY_ERROR"));
 		}
 
@@ -322,31 +325,19 @@ public class JenkinsServer {
 		String removeUserPermissions = String.format(ConfigurationUtil.getConfiguration("GROOVY_REMOVE_USER_FROM_GRANTED_PERMISSIONS"), username);
 		String jobSave = ConfigurationUtil.getConfiguration("GROOVY_JOB_SAVE");
 
-		executeScript(concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, removeUserPermissions, jobSave));
+		String script = GroovyUtil.concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, removeUserPermissions, jobSave);
+		GroovyUtil.executeScript(jenkinsClient, script);
 	}
 
-	private String executeScript(String script) throws JenkinsServerException {
+	private boolean checkAuthorizationStrategyIsProjectMatrix() throws JenkinsServerException {
 
-		try {
-			String postScript = String.format(ConfigurationUtil.getConfiguration("SCRIPT"), script);
-			HttpResponse<String> response = jenkinsClient.postURLEncoded(ConfigurationUtil.getConfiguration("URL_SCRIPT_TEXT"), postScript);
+		String checkAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_IS_AUTHORIZATION_STRATEGY_EQUALS_PROJECT_MATRIX");
+		String response = GroovyUtil.executeScript(jenkinsClient, checkAuthorizationStrategy);
 
-			if (response.getStatus() == HttpStatus.SC_FORBIDDEN) {
-				throw new JenkinsServerException(ConfigurationUtil.getConfiguration("FORBIDDEN_ERROR"));
-			}
-
-			return response.getBody();
-		} catch (JenkinsClientException exception) {
-			throw new JenkinsServerException(exception);
+		if (response.trim().equals(FALSE)) {
+			return false;
 		}
-	}
 
-	private String concatenateStrings(String... strings) {
-
-		StringBuilder strBuilder = new StringBuilder();
-		for (String str : strings) {
-			strBuilder.append(str);
-		}
-		return strBuilder.toString();
+		return true;
 	}
 }

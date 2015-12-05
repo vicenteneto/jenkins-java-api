@@ -11,7 +11,6 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
-import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 
 import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
@@ -55,8 +54,11 @@ public class JenkinsClient {
 		try {
 			GetRequest getRequest = Unirest.get(uriBuilder.build().toString());
 
-			return auth(getRequest)
-					.header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), MediaType.APPLICATION_XML_VALUE)
+			if (StringUtils.hasText(username)) {
+				getRequest.basicAuth(username, password);
+			}
+
+			return getRequest.header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), MediaType.APPLICATION_XML_VALUE)
 					.asString();
 		} catch (UnirestException | URISyntaxException exception) {
 			throw new JenkinsClientException(exception);
@@ -68,8 +70,11 @@ public class JenkinsClient {
 		try {
 			HttpRequestWithBody post = Unirest.post(uriBuilder.build().toString());
 
-			return ((HttpRequestWithBody) auth(post)
-					.header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), mediaType))
+			if (StringUtils.hasText(username)) {
+				post.basicAuth(username, password);
+			}
+
+			return post.header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), mediaType)
 					.body(requestBody)
 					.asString();
 		} catch (UnirestException | URISyntaxException exception) {
@@ -83,13 +88,5 @@ public class JenkinsClient {
 
 	private URIBuilder createURI(String path) {
 		return createDefaultURI().setPath(path);
-	}
-
-	private HttpRequest auth(HttpRequest request) {
-		if (StringUtils.hasText(username)) {
-			return request.basicAuth(username, password);
-		}
-
-		return request;
 	}
 }
