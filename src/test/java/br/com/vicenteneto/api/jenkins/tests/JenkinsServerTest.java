@@ -41,16 +41,18 @@ public class JenkinsServerTest {
 
 	@Before
 	public void setUp() throws Exception {
+
 		MockitoAnnotations.initMocks(this);
 
-		PowerMockito.whenNew(JenkinsClient.class).withAnyArguments().thenReturn(jenkinsClientMock);
-
+		PowerMockito.whenNew(JenkinsClient.class).withAnyArguments()
+				.thenReturn(jenkinsClientMock);
 		Mockito.when(jenkinsClientMock.postURLEncoded(Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(httpResponseStringMock);
 	}
 
 	@Test
 	public void constructorTest() throws Exception {
+
 		new JenkinsServer(new URI("http://localhost"));
 		new JenkinsServer(new URI("http://localhost"), "username", "password");
 	}
@@ -59,9 +61,7 @@ public class JenkinsServerTest {
 	public void getVersionTest() throws Exception {
 
 		String version = "0.0.0";
-
 		Mockito.when(httpResponseStringMock.getBody()).thenReturn(version);
-
 		Assert.assertEquals(jenkinsServer.getVersion(), version);
 	}
 

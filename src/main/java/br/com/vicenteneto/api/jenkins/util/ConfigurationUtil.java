@@ -17,6 +17,5 @@ public final class ConfigurationUtil {
 		}
 	}
 
-	private ConfigurationUtil() {
-	}
+	private ConfigurationUtil() { }
 }

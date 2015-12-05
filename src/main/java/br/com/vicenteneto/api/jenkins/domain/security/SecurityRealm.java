@@ -1,4 +1,3 @@
 package br.com.vicenteneto.api.jenkins.domain.security;
 
-public interface SecurityRealm {
-}
+public interface SecurityRealm { }

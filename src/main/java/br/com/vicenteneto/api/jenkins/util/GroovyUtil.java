@@ -44,31 +44,34 @@ public final class GroovyUtil {
 		}
 	}
 
-	public static String generateGroovyScript(SecurityRealm security) {
+	public static String generateGroovyScript(SecurityRealm security) throws JenkinsServerException {
 
 		if (security instanceof HudsonPrivateSecurityRealm) {
 			return generateHudsonPrivateSecurityRealm((HudsonPrivateSecurityRealm) security);
-		} else { // security instanceof LDAPSecurityRealm
+		} else if (security instanceof LDAPSecurityRealm) {
 			return generateLDAPSecurityRealm((LDAPSecurityRealm) security);
 		}
+
+		throw new JenkinsServerException(ConfigurationUtil.getConfiguration("UNKNOW_SECURITY_REALM"));
 	}
 
-	public static String generateGroovyScript(AuthorizationStrategy authorization) {
+	public static String generateGroovyScript(AuthorizationStrategy authorization) throws JenkinsServerException {
 
 		if (authorization instanceof FullControlOnceLoggedInAuthorizationStrategy) {
 			return generateFullControlOnceLoggedInAuthorizationStrategy();
 		} else if (authorization instanceof UnsecuredAuthorizationStrategy) {
 			return generateUnsecuredAuthorizationStrategy();
-		} else { // authorization instanceof ProjectMatrixAuthorizationStrategy
-			return generateProjectMatrixInAuthorizationStrategy((ProjectMatrixAuthorizationStrategy) authorization);
+		} else if (authorization instanceof ProjectMatrixAuthorizationStrategy) {
+			return generateProjectMatrixAuthorizationStrategy((ProjectMatrixAuthorizationStrategy) authorization);
 		}
+
+		throw new JenkinsServerException(ConfigurationUtil.getConfiguration("UNKNOWN_AUTHORIZATION_STRATEGY"));
 	}
 
 	private static String generateHudsonPrivateSecurityRealm(HudsonPrivateSecurityRealm security) {
 
 		boolean allowsSignUp = security.isAllowsSignUp();
-		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_HUDSON_PRIVATE_SECURITY_REALM"),
-				allowsSignUp);
+		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_HUDSON_PRIVATE_SECURITY_REALM"), allowsSignUp);
 	}
 
 	private static String generateLDAPSecurityRealm(LDAPSecurityRealm security) {
@@ -99,8 +102,7 @@ public final class GroovyUtil {
 		return ConfigurationUtil.getConfiguration("GROOVY_DEF_UNSECURED_AUTHORIZATION_STRATEGY");
 	}
 
-	private static String generateProjectMatrixInAuthorizationStrategy(
-			ProjectMatrixAuthorizationStrategy authorization) {
+	private static String generateProjectMatrixAuthorizationStrategy(ProjectMatrixAuthorizationStrategy authorization) {
 
 		StringBuilder sbScript = new StringBuilder();
 		sbScript.append(ConfigurationUtil.getConfiguration("GROOVY_DEF_PROJECT_MATRIX_AUTHORIZATION_STRATEGY"));
@@ -108,14 +110,12 @@ public final class GroovyUtil {
 		for (String sid : authorization.getGrantedPermissions().keySet()) {
 			for (Permission permission : authorization.getGrantedPermissions().get(sid)) {
 				sbScript.append(
-						String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"),
-								permission.getValue(), sid));
+						String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), permission.getValue(), sid));
 			}
 		}
 
 		return sbScript.toString();
 	}
 
-	private GroovyUtil() {
-	}
+	private GroovyUtil() { }
 }
