@@ -114,14 +114,14 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_FOUND"), pluginName));
 		}
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_DEPLOY_PLUGIN"), pluginName, dynamicLoad);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_DEPLOY_PLUGIN");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, pluginName, dynamicLoad));
 	}
 
 	public void updateAllInstalledPlugins(boolean dynamicLoad) throws JenkinsServerException {
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_UPDATE_PLUGINS"), dynamicLoad);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_UPDATE_PLUGINS");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, dynamicLoad));
 	}
 
 	public ListView getViewByName(String viewName) throws JenkinsServerException {
@@ -158,8 +158,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("VIEW_ALREADY_EXISTS"), viewName));
 		}
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_CREATE_LIST_VIEW"), viewName);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_CREATE_LIST_VIEW");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, viewName));
 
 		if (!checkViewExists(viewName)) {
 			throw new JenkinsServerException(
@@ -186,8 +186,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("VIEW_DOES_NOT_EXISTS"), viewName));
 		}
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_DELETE_VIEW"), viewName);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_DELETE_VIEW");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, viewName));
 
 		if (checkViewExists(viewName)) {
 			throw new JenkinsServerException(
@@ -229,8 +229,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_ALREADY_EXISTS"), jobName));
 		}
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_CREATE_FREE_STYLE_PROJECT"), jobName);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_CREATE_FREE_STYLE_PROJECT");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
 
 		if (!checkJobExists(jobName)) {
 			throw new JenkinsServerException(
@@ -245,8 +245,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_DELETE_ITEM"), jobName);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_DELETE_ITEM");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
 
 		if (checkJobExists(jobName)) {
 			throw new JenkinsServerException(
@@ -265,8 +265,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_JOB_TO_VIEW"), viewName, jobName);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_ADD_JOB_TO_VIEW");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, viewName, jobName));
 	}
 
 	public void executeJob(String jobName) throws JenkinsServerException {
@@ -275,8 +275,8 @@ public class JenkinsServer {
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
 		}
 
-		String script = String.format(ConfigurationUtil.getConfiguration("GROOVY_RUN_JOB"), jobName);
-		GroovyUtil.executeScript(jenkinsClient, script);
+		String script = ConfigurationUtil.getConfiguration("GROOVY_RUN_JOB");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
 	}
 
 	public void addUserToProjectMatrix(String jobName, String username, List<Permission> permissions)

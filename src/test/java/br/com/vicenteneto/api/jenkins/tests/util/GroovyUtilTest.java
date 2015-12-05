@@ -140,8 +140,9 @@ public class GroovyUtilTest {
 	public void generateProjectMatrixAuthorizationStrategyScript() throws Exception {
 		ProjectMatrixAuthorizationStrategy projectMatrixAS = new ProjectMatrixAuthorizationStrategy();
 		projectMatrixAS.add("admin", Permission.COMPUTER_BUILD);
+		projectMatrixAS.add("admin", Permission.COMPUTER_CONFIGURE);
 
 		Assert.assertEquals(GroovyUtil.generateGroovyScript(projectMatrixAS),
-				"def authorization = new hudson.security.ProjectMatrixAuthorizationStrategy();\nauthorization.add(hudson.security.Permission.fromId('hudson.model.Computer.Build'), 'admin');\n");
+				"def authorization = new hudson.security.ProjectMatrixAuthorizationStrategy();\nauthorization.add(hudson.security.Permission.fromId('hudson.model.Computer.Build'), 'admin');\nauthorization.add(hudson.security.Permission.fromId('hudson.model.Computer.Configure'), 'admin');\n");
 	}
 }

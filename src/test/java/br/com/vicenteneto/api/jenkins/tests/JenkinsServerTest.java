@@ -7,47 +7,34 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.mashape.unirest.http.HttpResponse;
-
 import br.com.vicenteneto.api.jenkins.JenkinsServer;
 import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
-import br.com.vicenteneto.api.jenkins.domain.Permission;
-import br.com.vicenteneto.api.jenkins.domain.authorization.FullControlOnceLoggedInAuthorizationStrategy;
-import br.com.vicenteneto.api.jenkins.domain.authorization.ProjectMatrixAuthorizationStrategy;
+import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
 import br.com.vicenteneto.api.jenkins.domain.authorization.UnsecuredAuthorizationStrategy;
 import br.com.vicenteneto.api.jenkins.domain.security.HudsonPrivateSecurityRealm;
-import br.com.vicenteneto.api.jenkins.domain.security.LDAPSecurityRealm;
+import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
+import br.com.vicenteneto.api.jenkins.util.GroovyUtil;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(JenkinsServer.class)
+@PrepareForTest(GroovyUtil.class)
 public class JenkinsServerTest {
 
 	@InjectMocks
 	private JenkinsServer jenkinsServer;
-
-	@Mock
-	private JenkinsClient jenkinsClientMock;
-
-	@Mock
-	private HttpResponse<String> httpResponseStringMock;
 
 	@Before
 	public void setUp() throws Exception {
 
 		MockitoAnnotations.initMocks(this);
 
-		PowerMockito.whenNew(JenkinsClient.class).withAnyArguments()
-				.thenReturn(jenkinsClientMock);
-		Mockito.when(jenkinsClientMock.postURLEncoded(Mockito.anyString(), Mockito.anyString()))
-				.thenReturn(httpResponseStringMock);
+		PowerMockito.mockStatic(GroovyUtil.class);
 	}
 
 	@Test
@@ -60,84 +47,35 @@ public class JenkinsServerTest {
 	@Test
 	public void getVersionTest() throws Exception {
 
-		String version = "0.0.0";
-		Mockito.when(httpResponseStringMock.getBody()).thenReturn(version);
-		Assert.assertEquals(jenkinsServer.getVersion(), version);
+		PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
+				.thenReturn("0.0.0");
+		Assert.assertEquals(jenkinsServer.getVersion(), "0.0.0");
 	}
 
 	@Test
-	public void setHudsonPrivateSecurityRealmTest() throws Exception {
+	public void setSecurityRealmTest() throws Exception {
 
-		HudsonPrivateSecurityRealm securityRealm;
-
-		securityRealm = new HudsonPrivateSecurityRealm(false);
-		jenkinsServer.setSecurityRealm(securityRealm);
-
-		securityRealm.setAllowsSignUp(true);
-		jenkinsServer.setSecurityRealm(securityRealm);
-	}
-
-	@Test
-	public void setLDAPSecurityRealmTest() throws Exception {
-
-		LDAPSecurityRealm securityRealm;
-
-		securityRealm = new LDAPSecurityRealm("server", "rootDN", "userSearchBase", "userSearch", "groupSearchBase",
-				"groupSearchFilter", "groupMembershipFilter", "managerDN", "managerPassword", false);
-		jenkinsServer.setSecurityRealm(securityRealm);
-
-		securityRealm = new LDAPSecurityRealm("server", "rootDN", "userSearchBase", "userSearch", "groupSearchBase",
-				"groupSearchFilter", "groupMembershipFilter", "managerDN", "managerPassword", true);
+		SecurityRealm securityRealm = new HudsonPrivateSecurityRealm(false);
 		jenkinsServer.setSecurityRealm(securityRealm);
 	}
 
 	@Test(expected = JenkinsServerException.class)
 	public void setAuthorizationStrategyThrowsJenkinsServerExceptionTest() throws Exception {
 
-		FullControlOnceLoggedInAuthorizationStrategy authorizationStrategy;
+		PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
+				.thenReturn("false");
 
-		authorizationStrategy = new FullControlOnceLoggedInAuthorizationStrategy();
-
-		Mockito.when(httpResponseStringMock.getBody()).thenReturn("false");
-
+		AuthorizationStrategy authorizationStrategy = new UnsecuredAuthorizationStrategy();
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
 	}
 
 	@Test
-	public void setFullControlOnceLoggedInAuthorizationStrategyTest() throws Exception {
+	public void setAuthorizationStrategyTest() throws Exception {
 
-		FullControlOnceLoggedInAuthorizationStrategy authorizationStrategy;
+		PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
+				.thenReturn("true");
 
-		authorizationStrategy = new FullControlOnceLoggedInAuthorizationStrategy();
-
-		Mockito.when(httpResponseStringMock.getBody()).thenReturn("");
-
-		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
-	}
-
-	@Test
-	public void setProjectMatrixAuthorizationStrategyTest() throws Exception {
-
-		ProjectMatrixAuthorizationStrategy authorizationStrategy;
-
-		authorizationStrategy = new ProjectMatrixAuthorizationStrategy();
-		authorizationStrategy.add("sid", Permission.COMPUTER_BUILD);
-		authorizationStrategy.add("sid", Permission.COMPUTER_CONFIGURE);
-
-		Mockito.when(httpResponseStringMock.getBody()).thenReturn("");
-
-		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
-	}
-
-	@Test
-	public void setUnsecuredAuthorizationStrategyTest() throws Exception {
-
-		UnsecuredAuthorizationStrategy authorizationStrategy;
-
-		authorizationStrategy = new UnsecuredAuthorizationStrategy();
-
-		Mockito.when(httpResponseStringMock.getBody()).thenReturn("");
-
+		AuthorizationStrategy authorizationStrategy = new UnsecuredAuthorizationStrategy();
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
 	}
 
@@ -145,5 +83,11 @@ public class JenkinsServerTest {
 	public void setSlaveAgentPortTest() throws Exception {
 
 		jenkinsServer.setSlaveAgentPort(0);
+	}
+
+	@Test
+	public void updateAllInstalledPluginsTest() throws Exception {
+
+		jenkinsServer.updateAllInstalledPlugins(true);
 	}
 }
