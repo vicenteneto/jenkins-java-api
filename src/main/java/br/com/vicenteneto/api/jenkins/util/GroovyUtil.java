@@ -1,5 +1,10 @@
 package br.com.vicenteneto.api.jenkins.util;
 
+import org.apache.http.HttpStatus;
+
+import com.mashape.unirest.http.HttpResponse;
+
+import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
 import br.com.vicenteneto.api.jenkins.domain.Permission;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
 import br.com.vicenteneto.api.jenkins.domain.authorization.FullControlOnceLoggedInAuthorizationStrategy;
@@ -8,8 +13,36 @@ import br.com.vicenteneto.api.jenkins.domain.authorization.UnsecuredAuthorizatio
 import br.com.vicenteneto.api.jenkins.domain.security.HudsonPrivateSecurityRealm;
 import br.com.vicenteneto.api.jenkins.domain.security.LDAPSecurityRealm;
 import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
+import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
+import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
 
 public final class GroovyUtil {
+
+	public static String concatenateStrings(String... strings) {
+
+		StringBuilder strBuilder = new StringBuilder();
+		for (String str : strings) {
+			strBuilder.append(str);
+		}
+		return strBuilder.toString();
+	}
+
+	public static String executeScript(JenkinsClient jenkinsClient, String script) throws JenkinsServerException {
+
+		try {
+			String postScript = String.format(ConfigurationUtil.getConfiguration("SCRIPT"), script);
+			HttpResponse<String> response = jenkinsClient
+					.postURLEncoded(ConfigurationUtil.getConfiguration("URL_SCRIPT_TEXT"), postScript);
+
+			if (response.getStatus() == HttpStatus.SC_FORBIDDEN) {
+				throw new JenkinsServerException(ConfigurationUtil.getConfiguration("FORBIDDEN_ERROR"));
+			}
+
+			return response.getBody();
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
 
 	public static String generateGroovyScript(SecurityRealm security) {
 
@@ -34,7 +67,8 @@ public final class GroovyUtil {
 	private static String generateHudsonPrivateSecurityRealm(HudsonPrivateSecurityRealm security) {
 
 		boolean allowsSignUp = security.isAllowsSignUp();
-		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_HUDSON_PRIVATE_SECURITY_REALM"), allowsSignUp);
+		return String.format(ConfigurationUtil.getConfiguration("GROOVY_DEF_HUDSON_PRIVATE_SECURITY_REALM"),
+				allowsSignUp);
 	}
 
 	private static String generateLDAPSecurityRealm(LDAPSecurityRealm security) {
@@ -73,12 +107,15 @@ public final class GroovyUtil {
 
 		for (String sid : authorization.getGrantedPermissions().keySet()) {
 			for (Permission permission : authorization.getGrantedPermissions().get(sid)) {
-				sbScript.append(String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"), permission.getValue(), sid));
+				sbScript.append(
+						String.format(ConfigurationUtil.getConfiguration("GROOVY_ADD_PERMISSION_TO_AUTHORIZATION"),
+								permission.getValue(), sid));
 			}
 		}
 
 		return sbScript.toString();
 	}
 
-	private GroovyUtil() { }
+	private GroovyUtil() {
+	}
 }

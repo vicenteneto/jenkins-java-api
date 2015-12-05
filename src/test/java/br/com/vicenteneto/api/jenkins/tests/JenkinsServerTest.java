@@ -43,8 +43,7 @@ public class JenkinsServerTest {
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 
-		PowerMockito.whenNew(JenkinsClient.class).withAnyArguments()
-				.thenReturn(jenkinsClientMock);
+		PowerMockito.whenNew(JenkinsClient.class).withAnyArguments().thenReturn(jenkinsClientMock);
 
 		Mockito.when(jenkinsClientMock.postURLEncoded(Mockito.anyString(), Mockito.anyString()))
 				.thenReturn(httpResponseStringMock);
@@ -61,8 +60,7 @@ public class JenkinsServerTest {
 
 		String version = "0.0.0";
 
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn(version);
+		Mockito.when(httpResponseStringMock.getBody()).thenReturn(version);
 
 		Assert.assertEquals(jenkinsServer.getVersion(), version);
 	}
@@ -84,14 +82,12 @@ public class JenkinsServerTest {
 
 		LDAPSecurityRealm securityRealm;
 
-		securityRealm = new LDAPSecurityRealm("server", "rootDN", "userSearchBase",
-				"userSearch", "groupSearchBase", "groupSearchFilter", "groupMembershipFilter",
-				"managerDN", "managerPassword", false);
+		securityRealm = new LDAPSecurityRealm("server", "rootDN", "userSearchBase", "userSearch", "groupSearchBase",
+				"groupSearchFilter", "groupMembershipFilter", "managerDN", "managerPassword", false);
 		jenkinsServer.setSecurityRealm(securityRealm);
 
-		securityRealm = new LDAPSecurityRealm("server", "rootDN", "userSearchBase",
-				"userSearch", "groupSearchBase", "groupSearchFilter", "groupMembershipFilter",
-				"managerDN", "managerPassword", true);
+		securityRealm = new LDAPSecurityRealm("server", "rootDN", "userSearchBase", "userSearch", "groupSearchBase",
+				"groupSearchFilter", "groupMembershipFilter", "managerDN", "managerPassword", true);
 		jenkinsServer.setSecurityRealm(securityRealm);
 	}
 
@@ -102,8 +98,7 @@ public class JenkinsServerTest {
 
 		authorizationStrategy = new FullControlOnceLoggedInAuthorizationStrategy();
 
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("false");
+		Mockito.when(httpResponseStringMock.getBody()).thenReturn("false");
 
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
 	}
@@ -115,8 +110,7 @@ public class JenkinsServerTest {
 
 		authorizationStrategy = new FullControlOnceLoggedInAuthorizationStrategy();
 
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("");
+		Mockito.when(httpResponseStringMock.getBody()).thenReturn("");
 
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
 	}
@@ -130,8 +124,7 @@ public class JenkinsServerTest {
 		authorizationStrategy.add("sid", Permission.COMPUTER_BUILD);
 		authorizationStrategy.add("sid", Permission.COMPUTER_CONFIGURE);
 
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("");
+		Mockito.when(httpResponseStringMock.getBody()).thenReturn("");
 
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
 	}
@@ -143,8 +136,7 @@ public class JenkinsServerTest {
 
 		authorizationStrategy = new UnsecuredAuthorizationStrategy();
 
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("");
+		Mockito.when(httpResponseStringMock.getBody()).thenReturn("");
 
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
 	}

@@ -68,10 +68,8 @@ public class JenkinsClient {
 		try {
 			HttpRequestWithBody post = Unirest.post(uriBuilder.build().toString());
 
-			return ((HttpRequestWithBody) auth(post)
-					.header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"), mediaType))
-					.body(requestBody)
-					.asString();
+			return ((HttpRequestWithBody) auth(post).header(ConfigurationUtil.getConfiguration("CONTENT_TYPE"),
+					mediaType)).body(requestBody).asString();
 		} catch (UnirestException | URISyntaxException exception) {
 			throw new JenkinsClientException(exception);
 		}
