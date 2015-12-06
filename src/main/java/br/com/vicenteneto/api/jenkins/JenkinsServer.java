@@ -70,7 +70,6 @@ public class JenkinsServer {
 		GroovyUtil.executeScript(jenkinsClient, script);
 	}
 
-	// Port - 0 to indicate random available TCP port. -1 to disable this service.
 	public void setSlaveAgentPort(int port) throws JenkinsServerException {
 
 		String setSlaveAgentPort = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_SLAVE_AGENT_PORT"), port);
@@ -118,10 +117,9 @@ public class JenkinsServer {
 		GroovyUtil.executeScript(jenkinsClient, String.format(script, pluginName, dynamicLoad));
 	}
 
-	public void updateAllInstalledPlugins(boolean dynamicLoad) throws JenkinsServerException {
+	public void updateAllInstalledPlugins() throws JenkinsServerException {
 
-		String script = ConfigurationUtil.getConfiguration("GROOVY_UPDATE_PLUGINS");
-		GroovyUtil.executeScript(jenkinsClient, String.format(script, dynamicLoad));
+		GroovyUtil.executeScript(jenkinsClient, ConfigurationUtil.getConfiguration("GROOVY_UPDATE_PLUGINS"));
 	}
 
 	public ListView getViewByName(String viewName) throws JenkinsServerException {
