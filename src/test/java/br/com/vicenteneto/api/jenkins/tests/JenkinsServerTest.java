@@ -169,7 +169,7 @@ public class JenkinsServerTest {
 	@Test
 	public void updateAllInstalledPluginsTest() throws Exception {
 
-		jenkinsServer.updateAllInstalledPlugins(true);
+		jenkinsServer.updateAllInstalledPlugins();
 	}
 
 	@Test(expected = JenkinsServerException.class)
