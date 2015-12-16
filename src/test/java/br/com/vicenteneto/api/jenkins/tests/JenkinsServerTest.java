@@ -438,7 +438,8 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(false);
 
-		jenkinsServer.executeJob(NAME);
+		int buildNumber = jenkinsServer.executeJob(NAME);
+		Assert.assertEquals(1, buildNumber);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -534,7 +535,7 @@ public class JenkinsServerTest {
 			Mockito.when(httpResponseStringMock.getStatus())
 					.thenReturn(HttpStatus.SC_OK);
 			Mockito.when(httpResponseStringMock.getBody())
-					.thenReturn("{\"name\":\"Job\"}");
+					.thenReturn("{\"name\":\"Job\", \"nextBuildNumber\":2}");
 		}
 	}
 

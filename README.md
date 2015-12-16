@@ -160,7 +160,7 @@ jenkinsServer.addJobToView("viewName", "jobName");
 
 #### Execute Job
 ```java
-jenkinsServer.executeJob("jobName");
+int buildNumber = jenkinsServer.executeJob("jobName");
 ```
 
 #### Add user to project matrix authorization table

@@ -267,7 +267,7 @@ public class JenkinsServer {
 		GroovyUtil.executeScript(jenkinsClient, String.format(script, viewName, jobName));
 	}
 
-	public void executeJob(String jobName) throws JenkinsServerException {
+	public int executeJob(String jobName) throws JenkinsServerException {
 		if (!checkJobExists(jobName)) {
 			throw new JenkinsServerException(
 					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
@@ -275,6 +275,8 @@ public class JenkinsServer {
 
 		String script = ConfigurationUtil.getConfiguration("GROOVY_RUN_JOB");
 		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
+
+		return getJobByName(jobName).getNextBuildNumber() - 1;
 	}
 
 	public void addUserToProjectMatrix(String jobName, String username, List<Permission> permissions)
