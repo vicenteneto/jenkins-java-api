@@ -13,6 +13,7 @@ public class Job {
 	private Build lastFailedBuild;
 	private Build lastStableBuild;
 	private Build lastSuccessfulBuild;
+	private int nextBuildNumber;
 
 	public Job(String name) {
 		this.name = name;
@@ -88,5 +89,13 @@ public class Job {
 
 	public void setLastSuccessfulBuild(Build lastSuccessfulBuild) {
 		this.lastSuccessfulBuild = lastSuccessfulBuild;
+	}
+
+	public int getNextBuildNumber() {
+		return nextBuildNumber;
+	}
+
+	public void setNextBuildNumber(int nextBuildNumber) {
+		this.nextBuildNumber = nextBuildNumber;
 	}
 }
