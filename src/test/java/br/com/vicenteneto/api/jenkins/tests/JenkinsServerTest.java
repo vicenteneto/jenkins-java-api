@@ -439,7 +439,7 @@ public class JenkinsServerTest {
 		mockGetJobByName(false);
 
 		int buildNumber = jenkinsServer.executeJob(NAME);
-		Assert.assertEquals(1, buildNumber);
+		Assert.assertEquals(2, buildNumber);
 	}
 
 	@Test(expected = JenkinsServerException.class)
