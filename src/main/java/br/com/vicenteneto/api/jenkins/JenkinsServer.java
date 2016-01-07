@@ -16,6 +16,7 @@ import br.com.vicenteneto.api.jenkins.domain.Permission;
 import br.com.vicenteneto.api.jenkins.domain.Plugin;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
 import br.com.vicenteneto.api.jenkins.domain.report.CoverageReport;
+import br.com.vicenteneto.api.jenkins.domain.report.StaticAnalysisReport;
 import br.com.vicenteneto.api.jenkins.domain.report.TestResultsReport;
 import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
@@ -374,6 +375,35 @@ public class JenkinsServer {
 			}
 
 			return gson.fromJson(httpResponse.getBody(), TestResultsReport.class);
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
+
+	public StaticAnalysisReport getStaticAnalysisReport(String jobName, int buildNumber) throws JenkinsServerException {
+
+		try {
+			if (!checkJobExists(jobName)) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
+			}
+
+			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_STATIC_ANALYSIS_REPORT"), jobName, buildNumber);
+			HttpResponse<String> httpResponse = jenkinsClient.getDepth(url);
+
+			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_CONFIGURED_ON_THIS_JOB"), jobName));
+			}
+
+			String defViolationsJson = ConfigurationUtil.getConfiguration("GROOVY_DEF_VIOLATIONS_JSON");
+			String createViolationsJson = String.format(ConfigurationUtil.getConfiguration("GROOVY_CREATE_VIOLATIONS_JSON"), jobName, buildNumber);
+			String printViolationsJson = ConfigurationUtil.getConfiguration("GROOVY_PRINT_VIOLATIONS_JSON");
+
+			String script = GroovyUtil.concatenateStrings(defViolationsJson, createViolationsJson, printViolationsJson);
+			String response = GroovyUtil.executeScript(jenkinsClient, script);
+
+			return gson.fromJson(response, StaticAnalysisReport.class);
 		} catch (JenkinsClientException exception) {
 			throw new JenkinsServerException(exception);
 		}
