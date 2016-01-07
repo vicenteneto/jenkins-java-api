@@ -16,6 +16,7 @@ import br.com.vicenteneto.api.jenkins.domain.Permission;
 import br.com.vicenteneto.api.jenkins.domain.Plugin;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
 import br.com.vicenteneto.api.jenkins.domain.report.CoverageReport;
+import br.com.vicenteneto.api.jenkins.domain.report.ReportType;
 import br.com.vicenteneto.api.jenkins.domain.report.StaticAnalysisReport;
 import br.com.vicenteneto.api.jenkins.domain.report.TestResultsReport;
 import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
@@ -23,6 +24,7 @@ import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
 import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
 import br.com.vicenteneto.api.jenkins.util.GroovyUtil;
+import br.com.vicenteneto.api.jenkins.util.ReportUtil;
 
 public class JenkinsServer {
 
@@ -337,76 +339,31 @@ public class JenkinsServer {
 
 	public CoverageReport getCoverageReport(String jobName, int buildNumber) throws JenkinsServerException {
 
-		try {
-			if (!checkJobExists(jobName)) {
-				throw new JenkinsServerException(
-						String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
-			}
+		String jsonReport = getJsonReport(jobName, buildNumber, ReportType.COVERAGE_REPORT);
 
-			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_COVERAGE_REPORT"), jobName, buildNumber);
-			HttpResponse<String> httpResponse = jenkinsClient.getDepth(url);
-
-			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
-				throw new JenkinsServerException(
-						String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_CONFIGURED_ON_THIS_JOB"), jobName));
-			}
-
-			JSONObject jsonObject = new JSONObject(httpResponse.getBody());
-			return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), CoverageReport.class);
-		} catch (JenkinsClientException exception) {
-			throw new JenkinsServerException(exception);
-		}
+		JSONObject jsonObject = new JSONObject(jsonReport);
+		return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), CoverageReport.class);
 	}
 
 	public TestResultsReport getTestResultsReport(String jobName, int buildNumber) throws JenkinsServerException {
 
-		try {
-			if (!checkJobExists(jobName)) {
-				throw new JenkinsServerException(
-						String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
-			}
+		String jsonReport = getJsonReport(jobName, buildNumber, ReportType.TEST_RESULTS_REPORT);
 
-			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_TEST_RESULTS_REPORT"), jobName, buildNumber);
-			HttpResponse<String> httpResponse = jenkinsClient.getDepth(url);
-
-			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
-				throw new JenkinsServerException(
-						String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_CONFIGURED_ON_THIS_JOB"), jobName));
-			}
-
-			return gson.fromJson(httpResponse.getBody(), TestResultsReport.class);
-		} catch (JenkinsClientException exception) {
-			throw new JenkinsServerException(exception);
-		}
+		return gson.fromJson(jsonReport, TestResultsReport.class);
 	}
 
 	public StaticAnalysisReport getStaticAnalysisReport(String jobName, int buildNumber) throws JenkinsServerException {
 
-		try {
-			if (!checkJobExists(jobName)) {
-				throw new JenkinsServerException(
-						String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
-			}
+		getJsonReport(jobName, buildNumber, ReportType.STATIC_ANALYSIS_REPORT);
 
-			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_STATIC_ANALYSIS_REPORT"), jobName, buildNumber);
-			HttpResponse<String> httpResponse = jenkinsClient.getDepth(url);
+		String defViolationsJson = ConfigurationUtil.getConfiguration("GROOVY_DEF_VIOLATIONS_JSON");
+		String createViolationsJson = String.format(ConfigurationUtil.getConfiguration("GROOVY_CREATE_VIOLATIONS_JSON"), jobName, buildNumber);
+		String printViolationsJson = ConfigurationUtil.getConfiguration("GROOVY_PRINT_VIOLATIONS_JSON");
 
-			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
-				throw new JenkinsServerException(
-						String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_CONFIGURED_ON_THIS_JOB"), jobName));
-			}
+		String script = GroovyUtil.concatenateStrings(defViolationsJson, createViolationsJson, printViolationsJson);
+		String response = GroovyUtil.executeScript(jenkinsClient, script);
 
-			String defViolationsJson = ConfigurationUtil.getConfiguration("GROOVY_DEF_VIOLATIONS_JSON");
-			String createViolationsJson = String.format(ConfigurationUtil.getConfiguration("GROOVY_CREATE_VIOLATIONS_JSON"), jobName, buildNumber);
-			String printViolationsJson = ConfigurationUtil.getConfiguration("GROOVY_PRINT_VIOLATIONS_JSON");
-
-			String script = GroovyUtil.concatenateStrings(defViolationsJson, createViolationsJson, printViolationsJson);
-			String response = GroovyUtil.executeScript(jenkinsClient, script);
-
-			return gson.fromJson(response, StaticAnalysisReport.class);
-		} catch (JenkinsClientException exception) {
-			throw new JenkinsServerException(exception);
-		}
+		return gson.fromJson(response, StaticAnalysisReport.class);
 	}
 
 	private boolean checkAuthorizationStrategyIsProjectMatrix() throws JenkinsServerException {
@@ -419,5 +376,27 @@ public class JenkinsServer {
 		}
 
 		return true;
+	}
+
+	private String getJsonReport(String jobName, int buildNumber, ReportType reportType) throws JenkinsServerException {
+
+		try {
+			if (!checkJobExists(jobName)) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
+			}
+
+			String url = String.format(ReportUtil.getBaseReportUrl(reportType), jobName, buildNumber);
+			HttpResponse<String> httpResponse = jenkinsClient.getDepth(url);
+
+			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_CONFIGURED_ON_THIS_JOB"), jobName));
+			}
+
+			return httpResponse.getBody();
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
 	}
 }
