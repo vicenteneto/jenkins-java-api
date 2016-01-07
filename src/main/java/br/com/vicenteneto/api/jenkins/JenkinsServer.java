@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.apache.http.HttpStatus;
+import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
@@ -14,15 +15,17 @@ import br.com.vicenteneto.api.jenkins.domain.ListView;
 import br.com.vicenteneto.api.jenkins.domain.Permission;
 import br.com.vicenteneto.api.jenkins.domain.Plugin;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
+import br.com.vicenteneto.api.jenkins.domain.report.CoverageReport;
 import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
-import br.com.vicenteneto.api.jenkins.util.GroovyUtil;
 import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
+import br.com.vicenteneto.api.jenkins.util.GroovyUtil;
 
 public class JenkinsServer {
 
 	private static final String FALSE = "false";
+	private static final String RESULTS = "results";
 
 	private JenkinsClient jenkinsClient;
 	private Gson gson;
@@ -328,6 +331,29 @@ public class JenkinsServer {
 
 		String script = GroovyUtil.concatenateStrings(propertyName, job, addAuthorizationMatrixProperty, property, removeUserPermissions, jobSave);
 		GroovyUtil.executeScript(jenkinsClient, script);
+	}
+
+	public CoverageReport getCoverageReport(String jobName, int buildNumber) throws JenkinsServerException {
+
+		try {
+			if (!checkJobExists(jobName)) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
+			}
+
+			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_COVERAGE_REPORT"), jobName, buildNumber);
+			HttpResponse<String> httpResponse = jenkinsClient.getDepth(url);
+
+			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_CONFIGURED_ON_THIS_JOB"), jobName));
+			}
+
+			JSONObject jsonObject = new JSONObject(httpResponse.getBody());
+			return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), CoverageReport.class);
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
 	}
 
 	private boolean checkAuthorizationStrategyIsProjectMatrix() throws JenkinsServerException {
