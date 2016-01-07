@@ -19,6 +19,8 @@ import br.com.vicenteneto.api.jenkins.util.ConfigurationUtil;
 public class JenkinsClient {
 
 	private static final String EMPTY_STRING = "";
+	private static final String DEPTH_PARAM = "depth";
+	private static final String DEPTH_VALUE = "100";
 
 	private URI serverURI;
 	private String username;
@@ -36,6 +38,13 @@ public class JenkinsClient {
 
 	public HttpResponse<String> get(String path) throws JenkinsClientException {
 		return get(createURI(path));
+	}
+
+	public HttpResponse<String> getDepth(String path) throws JenkinsClientException {
+		URIBuilder uri = createURI(path);
+		uri.addParameter(DEPTH_PARAM, DEPTH_VALUE);
+
+		return get(uri);
 	}
 
 	public HttpResponse<String> postXML(String path) throws JenkinsClientException {
