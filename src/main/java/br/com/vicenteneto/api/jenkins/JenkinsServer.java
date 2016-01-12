@@ -10,11 +10,13 @@ import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
 
 import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
+import br.com.vicenteneto.api.jenkins.domain.CoverageType;
 import br.com.vicenteneto.api.jenkins.domain.Job;
 import br.com.vicenteneto.api.jenkins.domain.ListView;
 import br.com.vicenteneto.api.jenkins.domain.Permission;
 import br.com.vicenteneto.api.jenkins.domain.Plugin;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
+import br.com.vicenteneto.api.jenkins.domain.report.CoverageElement;
 import br.com.vicenteneto.api.jenkins.domain.report.CoverageReport;
 import br.com.vicenteneto.api.jenkins.domain.report.ReportType;
 import br.com.vicenteneto.api.jenkins.domain.report.StaticAnalysisReport;
@@ -343,6 +345,20 @@ public class JenkinsServer {
 
 		JSONObject jsonObject = new JSONObject(jsonReport);
 		return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), CoverageReport.class);
+	}
+
+	public CoverageElement getCoverageReportElement(String jobName, int buildNumber, CoverageType coverageType)
+			throws JenkinsServerException {
+
+		CoverageReport coverageReport = getCoverageReport(jobName, buildNumber);
+
+		for (CoverageElement element : coverageReport.getElements()) {
+			if (coverageType.name().equalsIgnoreCase(element.getName())) {
+				return element;
+			}
+		}
+
+		throw new JenkinsServerException(ConfigurationUtil.getConfiguration("COVERAGE_REPORT_TYPE_ERROR"));
 	}
 
 	public TestResultsReport getTestResultsReport(String jobName, int buildNumber) throws JenkinsServerException {

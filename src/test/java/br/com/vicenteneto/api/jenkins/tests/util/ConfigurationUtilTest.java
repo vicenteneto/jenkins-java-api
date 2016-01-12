@@ -14,7 +14,6 @@ public class ConfigurationUtilTest {
 
 	private static final String KEY_INVALID = "conf.INVALID";
 	private static final String KEY_VALID = "AUTHORIZATION";
-
 	private static final String VALUE_INVALID = "!conf.INVALID!";
 	private static final String VALUE_VALID = "Authorization";
 
