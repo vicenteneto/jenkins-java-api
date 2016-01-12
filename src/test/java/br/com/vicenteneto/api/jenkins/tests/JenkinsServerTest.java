@@ -451,6 +451,7 @@ public class JenkinsServerTest {
 		mockGetJobByName(false);
 
 		int buildNumber = jenkinsServer.executeJob(TestsData.JOB_NAME);
+
 		Assert.assertEquals(2, buildNumber);
 	}
 
