@@ -333,6 +333,11 @@ public class JenkinsServerTest {
 		Assert.assertEquals(job.getDescription(), TestsData.JOB_DESCRIPTION);
 		Assert.assertEquals(job.isBuildable(), TestsData.JOB_BUILDABLE);
 		Assert.assertEquals(job.getBuilds().size(), 0);
+		Assert.assertNull(job.getLastBuild());
+		Assert.assertNull(job.getLastCompletedBuild());
+		Assert.assertNull(job.getLastFailedBuild());
+		Assert.assertNull(job.getLastStableBuild());
+		Assert.assertNull(job.getLastSuccessfulBuild());
 		Assert.assertEquals(job.getNextBuildNumber(), TestsData.JOB_NEXT_BUILD_NUMBER);
 	}
 
@@ -515,6 +520,20 @@ public class JenkinsServerTest {
 		CoverageReport coverageReport = jenkinsServer.getCoverageReport(TestsData.JOB_NAME, BUILD_NUMBER);
 
 		Assert.assertEquals(coverageReport.getName(), "Cobertura Coverage Report");
+	}
+
+	@Test
+	public void getCoverageReportTest() throws Exception {
+
+		mockGetJobByName(false);
+		mockGetDepth(false);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(COVERAGE_REPORT_JSON);
+
+		CoverageReport coverageReport = jenkinsServer.getCoverageReport(TestsData.JOB_NAME, BUILD_NUMBER);
+
+		Assert.assertEquals(coverageReport.getName(), "Cobertura Coverage Report");
+		Assert.assertEquals(coverageReport.getElements().size(), 3);
 	}
 
 	@Test(expected = JenkinsServerException.class)
