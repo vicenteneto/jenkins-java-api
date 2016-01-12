@@ -20,25 +20,41 @@ import com.mashape.unirest.http.HttpResponse;
 
 import br.com.vicenteneto.api.jenkins.JenkinsServer;
 import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
+import br.com.vicenteneto.api.jenkins.domain.CoverageType;
 import br.com.vicenteneto.api.jenkins.domain.Job;
 import br.com.vicenteneto.api.jenkins.domain.ListView;
 import br.com.vicenteneto.api.jenkins.domain.Permission;
+import br.com.vicenteneto.api.jenkins.domain.Plugin;
 import br.com.vicenteneto.api.jenkins.domain.authorization.AuthorizationStrategy;
 import br.com.vicenteneto.api.jenkins.domain.authorization.UnsecuredAuthorizationStrategy;
+import br.com.vicenteneto.api.jenkins.domain.report.CoverageElement;
+import br.com.vicenteneto.api.jenkins.domain.report.CoverageReport;
+import br.com.vicenteneto.api.jenkins.domain.report.StaticAnalysisReport;
+import br.com.vicenteneto.api.jenkins.domain.report.TestResultsReport;
 import br.com.vicenteneto.api.jenkins.domain.security.HudsonPrivateSecurityRealm;
 import br.com.vicenteneto.api.jenkins.domain.security.SecurityRealm;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsClientException;
 import br.com.vicenteneto.api.jenkins.exception.JenkinsServerException;
+import br.com.vicenteneto.api.jenkins.tests.data.TestsData;
 import br.com.vicenteneto.api.jenkins.util.GroovyUtil;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ JenkinsServer.class, JenkinsClient.class, GroovyUtil.class })
 public class JenkinsServerTest {
 
-	private static final String NAME = "Name";
-	private static final String DESCRIPTION = "Description";
-	private static final String USERNAME = "Username";
+	private static final String URL = "http://localhost";
+	private static final String USERNAME = "username";
+	private static final String PASSWORD = "password";
+	private static final String VERSION = "0.0.0";
 	private static final String FALSE = "false";
+	private static final String TRUE = "true";
+	private static final String VIEW_JSON = "{\"name\": \"View\", \"description\" : \"Description\", \"jobs\": []}";
+	private static final String JOB_JSON = "{\"name\": \"Job\", \"description\": \"Description\", \"buildable\": true, \"nextBuildNumber\": 2, \"builds\": []}";
+	private static final String PLUGIN_JSON = "{\"name\": \"junit\", \"url\": \"http://updates.jenkins-ci.org/download/plugins/junit/1.10/junit.hpi\", \"version\": \"1.10\", \"compatibleWithInstalledVersion\": true, \"excerpt\": \"Allows JUnit-format test results to be published.\", \"title\": \"JUnit Plugin\", \"wiki\": \"https://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin\"}";
+	private static final String COVERAGE_REPORT_JSON = "{\"results\": {\"elements\": [{\"denominator\": 37.0, \"name\": \"Packages\", \"numerator\": 27.0, \"ratio\": 72.97298}, {\"denominator\": 176.0, \"name\": \"Files\", \"numerator\": 123.0, \"ratio\": 69.88636}, {\"denominator\": 182.0, \"name\": \"Classes\", \"numerator\": 126.0, \"ratio\": 69.23077}], \"name\" : \"Cobertura Coverage Report\"}}";
+	private static final String TEST_RESULTS_REPORT_JSON = "{\"duration\": 23.822, \"empty\": false, \"failCount\": 2, \"passCount\": 355, \"skipCount\" : 0}";
+	private static final String STATIC_ANALYSIS_REPORT_JSON = "{\"violations\": {\"junit\": 10}, \"violationsCount\": 10}";
+	private static final int BUILD_NUMBER = 1;
 
 	@InjectMocks
 	private JenkinsServer jenkinsServer;
@@ -55,23 +71,23 @@ public class JenkinsServerTest {
 		MockitoAnnotations.initMocks(this);
 
 		PowerMockito.whenNew(JenkinsClient.class).withAnyArguments()
-				.thenReturn(jenkinsClientMock);
+			.thenReturn(jenkinsClientMock);
 		PowerMockito.mockStatic(GroovyUtil.class);
 	}
 
 	@Test
 	public void constructorTest() throws Exception {
 
-		new JenkinsServer(new URI("http://localhost"));
-		new JenkinsServer(new URI("http://localhost"), "username", "password");
+		new JenkinsServer(new URI(URL));
+		new JenkinsServer(new URI(URL), USERNAME, PASSWORD);
 	}
 
 	@Test
 	public void getVersionTest() throws Exception {
 
-		PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
-				.thenReturn("0.0.0");
-		Assert.assertEquals(jenkinsServer.getVersion(), "0.0.0");
+		mockExecuteScript(VERSION);
+
+		Assert.assertEquals(jenkinsServer.getVersion(), VERSION);
 	}
 
 	@Test
@@ -84,8 +100,7 @@ public class JenkinsServerTest {
 	@Test(expected = JenkinsServerException.class)
 	public void setAuthorizationStrategyThrowsJenkinsServerExceptionTest() throws Exception {
 
-		PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
-				.thenReturn("false");
+		mockExecuteScript(FALSE);
 
 		AuthorizationStrategy authorizationStrategy = new UnsecuredAuthorizationStrategy();
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
@@ -94,8 +109,7 @@ public class JenkinsServerTest {
 	@Test
 	public void setAuthorizationStrategyTest() throws Exception {
 
-		PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
-				.thenReturn("true");
+		mockExecuteScript(TRUE);
 
 		AuthorizationStrategy authorizationStrategy = new UnsecuredAuthorizationStrategy();
 		jenkinsServer.setAuthorizationStrategy(authorizationStrategy);
@@ -112,18 +126,16 @@ public class JenkinsServerTest {
 
 		mockGetPluginByName(true);
 
-		jenkinsServer.getPluginByName(NAME);
+		jenkinsServer.getPluginByName(TestsData.PLUGIN_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
 	public void getPluginByNameNotFoundThrowsJenkinsServerExceptionTest() throws Exception {
 
-		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenReturn(httpResponseStringMock);
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_NOT_FOUND);
+		mockGet(false);
+		mockGetStatus(HttpStatus.SC_NOT_FOUND);
 
-		jenkinsServer.getPluginByName(NAME);
+		jenkinsServer.getPluginByName(TestsData.PLUGIN_NAME);
 	}
 
 	@Test
@@ -131,7 +143,15 @@ public class JenkinsServerTest {
 
 		mockGetPluginByName(false);
 
-		jenkinsServer.getPluginByName(NAME);
+		Plugin plugin = jenkinsServer.getPluginByName(TestsData.PLUGIN_NAME);
+
+		Assert.assertEquals(plugin.getName(), TestsData.PLUGIN_NAME);
+		Assert.assertEquals(plugin.getUrl(), TestsData.PLUGIN_URL);
+		Assert.assertEquals(plugin.getVersion(), TestsData.PLUGIN_VERSION);
+		Assert.assertEquals(plugin.isCompatibleWithInstalledVersion(), TestsData.PLUGIN_COMPATIBLE_WITH_INSTALLED_VERSION);
+		Assert.assertEquals(plugin.getExcerpt(), TestsData.PLUGIN_EXCERPT);
+		Assert.assertEquals(plugin.getTitle(), TestsData.PLUGIN_TITLE);
+		Assert.assertEquals(plugin.getWiki(), TestsData.PLUGIN_WIKI);
 	}
 
 	@Test
@@ -139,7 +159,7 @@ public class JenkinsServerTest {
 
 		mockGetPluginByName(true);
 
-		Assert.assertFalse(jenkinsServer.checkPluginExists(NAME));
+		Assert.assertFalse(jenkinsServer.checkPluginExists(TestsData.PLUGIN_NAME));
 	}
 
 	@Test
@@ -147,7 +167,7 @@ public class JenkinsServerTest {
 
 		mockGetPluginByName(false);
 
-		Assert.assertTrue(jenkinsServer.checkPluginExists(NAME));
+		Assert.assertTrue(jenkinsServer.checkPluginExists(TestsData.PLUGIN_NAME));
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -155,7 +175,7 @@ public class JenkinsServerTest {
 
 		mockGetPluginByName(true);
 
-		jenkinsServer.installPluginByName(NAME, true);
+		jenkinsServer.installPluginByName(TestsData.PLUGIN_NAME, true);
 	}
 
 	@Test
@@ -163,7 +183,7 @@ public class JenkinsServerTest {
 
 		mockGetPluginByName(false);
 
-		jenkinsServer.installPluginByName(NAME, true);
+		jenkinsServer.installPluginByName(TestsData.PLUGIN_NAME, true);
 	}
 
 	@Test
@@ -177,18 +197,16 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(true);
 
-		jenkinsServer.getViewByName(NAME);
+		jenkinsServer.getViewByName(TestsData.VIEW_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
 	public void getViewByNameNotFoundThrowsJenkinsServerExceptionTest() throws Exception {
 
-		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenReturn(httpResponseStringMock);
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_NOT_FOUND);
+		mockGet(false);
+		mockGetStatus(HttpStatus.SC_NOT_FOUND);
 
-		jenkinsServer.getViewByName(NAME);
+		jenkinsServer.getViewByName(TestsData.VIEW_NAME);
 	}
 
 	@Test
@@ -196,8 +214,11 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(false);
 
-		ListView view = jenkinsServer.getViewByName(NAME);
-		Assert.assertEquals(view.getName(), "View");
+		ListView listView = jenkinsServer.getViewByName(TestsData.VIEW_NAME);
+
+		Assert.assertEquals(listView.getName(), TestsData.VIEW_NAME);
+		Assert.assertEquals(listView.getDescription(), TestsData.VIEW_DESCRIPTION);
+		Assert.assertEquals(listView.getJobs().size(), 0);
 	}
 
 	@Test
@@ -205,7 +226,7 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(true);
 
-		Assert.assertFalse(jenkinsServer.checkViewExists(NAME));
+		Assert.assertFalse(jenkinsServer.checkViewExists(TestsData.VIEW_NAME));
 	}
 
 	@Test
@@ -213,7 +234,7 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(false);
 
-		Assert.assertTrue(jenkinsServer.checkViewExists(NAME));
+		Assert.assertTrue(jenkinsServer.checkViewExists(TestsData.VIEW_NAME));
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -221,7 +242,7 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(false);
 
-		jenkinsServer.createView(NAME);
+		jenkinsServer.createView(TestsData.VIEW_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -229,35 +250,31 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(true);
 
-		jenkinsServer.createView(NAME);
+		jenkinsServer.createView(TestsData.VIEW_NAME);
 	}
 
 	@Test
 	public void createViewTest() throws Exception {
 
 		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenThrow(new JenkinsClientException(null))
-				.thenReturn(httpResponseStringMock);
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_OK);
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("{\"name\":\"View\"}");
+			.thenThrow(new JenkinsClientException(null))
+			.thenReturn(httpResponseStringMock);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(VIEW_JSON);
 
-		jenkinsServer.createView(NAME);
+		jenkinsServer.createView(TestsData.VIEW_NAME);
 	}
 
 	@Test
 	public void createViewWithDescriptionTest() throws Exception {
 
 		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenThrow(new JenkinsClientException(null))
-				.thenReturn(httpResponseStringMock);
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_OK);
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("{\"name\":\"View\"}");
+			.thenThrow(new JenkinsClientException(null))
+			.thenReturn(httpResponseStringMock);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(VIEW_JSON);
 
-		jenkinsServer.createView(NAME, DESCRIPTION);
+		jenkinsServer.createView(TestsData.VIEW_NAME, TestsData.VIEW_DESCRIPTION);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -265,7 +282,7 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(true);
 
-		jenkinsServer.deleteView(NAME);
+		jenkinsServer.deleteView(TestsData.VIEW_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -273,21 +290,19 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(false);
 
-		jenkinsServer.deleteView(NAME);
+		jenkinsServer.deleteView(TestsData.VIEW_NAME);
 	}
 
 	@Test
 	public void deleteViewTest() throws Exception {
 
 		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenReturn(httpResponseStringMock)
-				.thenThrow(new JenkinsClientException(null));
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_OK);
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("{\"name\":\"View\"}");
+			.thenReturn(httpResponseStringMock)
+			.thenThrow(new JenkinsClientException(null));
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(VIEW_JSON);
 
-		jenkinsServer.deleteView(NAME);
+		jenkinsServer.deleteView(TestsData.VIEW_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -295,18 +310,16 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(true);
 
-		jenkinsServer.getJobByName(NAME);
+		jenkinsServer.getJobByName(TestsData.JOB_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
 	public void getJobByNameNotFoundThrowsJenkinsServerExceptionTest() throws Exception {
 
-		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenReturn(httpResponseStringMock);
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_NOT_FOUND);
+		mockGet(false);
+		mockGetStatus(HttpStatus.SC_NOT_FOUND);
 
-		jenkinsServer.getJobByName(NAME);
+		jenkinsServer.getJobByName(TestsData.JOB_NAME);
 	}
 
 	@Test
@@ -314,8 +327,13 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(false);
 
-		Job job = jenkinsServer.getJobByName(NAME);
-		Assert.assertEquals(job.getName(), "Job");
+		Job job = jenkinsServer.getJobByName(TestsData.JOB_NAME);
+
+		Assert.assertEquals(job.getName(), TestsData.JOB_NAME);
+		Assert.assertEquals(job.getDescription(), TestsData.JOB_DESCRIPTION);
+		Assert.assertEquals(job.isBuildable(), TestsData.JOB_BUILDABLE);
+		Assert.assertEquals(job.getBuilds().size(), 0);
+		Assert.assertEquals(job.getNextBuildNumber(), TestsData.JOB_NEXT_BUILD_NUMBER);
 	}
 
 	@Test
@@ -323,7 +341,7 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(true);
 
-		Assert.assertFalse(jenkinsServer.checkJobExists(NAME));
+		Assert.assertFalse(jenkinsServer.checkJobExists(TestsData.JOB_NAME));
 	}
 
 	@Test
@@ -331,7 +349,7 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(false);
 
-		Assert.assertTrue(jenkinsServer.checkJobExists(NAME));
+		Assert.assertTrue(jenkinsServer.checkJobExists(TestsData.JOB_NAME));
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -339,7 +357,7 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(false);
 
-		jenkinsServer.createJob(NAME);
+		jenkinsServer.createJob(TestsData.JOB_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -347,21 +365,19 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(true);
 
-		jenkinsServer.createJob(NAME);
+		jenkinsServer.createJob(TestsData.JOB_NAME);
 	}
 
 	@Test
 	public void createJobTest() throws Exception {
 
 		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenThrow(new JenkinsClientException(null))
-				.thenReturn(httpResponseStringMock);
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_OK);
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("{\"name\":\"Job\"}");
+			.thenThrow(new JenkinsClientException(null))
+			.thenReturn(httpResponseStringMock);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(JOB_JSON);
 
-		jenkinsServer.createJob(NAME);
+		jenkinsServer.createJob(TestsData.JOB_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -369,7 +385,7 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(true);
 
-		jenkinsServer.deleteJob(NAME);
+		jenkinsServer.deleteJob(TestsData.JOB_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -377,21 +393,19 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(false);
 
-		jenkinsServer.deleteJob(NAME);
+		jenkinsServer.deleteJob(TestsData.JOB_NAME);
 	}
 
 	@Test
 	public void deleteJobTest() throws Exception {
 
 		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenReturn(httpResponseStringMock)
-				.thenThrow(new JenkinsClientException(null));
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_OK);
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("{\"name\":\"Job\"}");
+			.thenReturn(httpResponseStringMock)
+			.thenThrow(new JenkinsClientException(null));
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(JOB_JSON);
 
-		jenkinsServer.deleteJob(NAME);
+		jenkinsServer.deleteJob(TestsData.JOB_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -399,21 +413,19 @@ public class JenkinsServerTest {
 
 		mockGetViewByName(true);
 
-		jenkinsServer.addJobToView(NAME, NAME);
+		jenkinsServer.addJobToView(TestsData.JOB_NAME, TestsData.VIEW_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
 	public void addJobInexistentToViewTest() throws Exception {
 
 		Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-				.thenReturn(httpResponseStringMock)
-				.thenThrow(new JenkinsClientException(null));
-		Mockito.when(httpResponseStringMock.getStatus())
-				.thenReturn(HttpStatus.SC_OK);
-		Mockito.when(httpResponseStringMock.getBody())
-				.thenReturn("{\"name\":\"View\"}");
+			.thenReturn(httpResponseStringMock)
+			.thenThrow(new JenkinsClientException(null));
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(VIEW_JSON);
 
-		jenkinsServer.addJobToView(NAME, NAME);
+		jenkinsServer.addJobToView(TestsData.JOB_NAME, TestsData.VIEW_NAME);
 	}
 
 	@Test
@@ -422,7 +434,7 @@ public class JenkinsServerTest {
 		mockGetViewByName(false);
 		mockGetJobByName(false);
 
-		jenkinsServer.addJobToView(NAME, NAME);
+		jenkinsServer.addJobToView(TestsData.JOB_NAME, TestsData.VIEW_NAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -430,7 +442,7 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(true);
 
-		jenkinsServer.executeJob(NAME);
+		jenkinsServer.executeJob(TestsData.JOB_NAME);
 	}
 
 	@Test
@@ -438,8 +450,8 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(false);
 
-		int buildNumber = jenkinsServer.executeJob(NAME);
-		Assert.assertEquals(1, buildNumber);
+		int buildNumber = jenkinsServer.executeJob(TestsData.JOB_NAME);
+		Assert.assertEquals(2, buildNumber);
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -447,25 +459,25 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(true);
 
-		jenkinsServer.addUserToProjectMatrix(NAME, USERNAME, Arrays.asList(Permission.COMPUTER_BUILD, Permission.COMPUTER_CONFIGURE));
+		jenkinsServer.addUserToProjectMatrix(TestsData.JOB_NAME, TestsData.USERNAME, Arrays.asList(Permission.COMPUTER_BUILD, Permission.COMPUTER_CONFIGURE));
 	}
 
 	@Test(expected = JenkinsServerException.class)
 	public void addUserToProjectMatrixNonConfiguredTest() throws Exception {
 
 		mockGetJobByName(false);
-		mockcheckAuthorizationStrategy(false);
+		mockCheckAuthorizationStrategy(false);
 
-		jenkinsServer.addUserToProjectMatrix(NAME, USERNAME, Arrays.asList(Permission.COMPUTER_BUILD));
+		jenkinsServer.addUserToProjectMatrix(TestsData.JOB_NAME, TestsData.USERNAME, Arrays.asList(Permission.COMPUTER_BUILD));
 	}
 
 	@Test
 	public void addUserToProjectMatrixTest() throws Exception {
 
 		mockGetJobByName(false);
-		mockcheckAuthorizationStrategy(true);
+		mockCheckAuthorizationStrategy(true);
 
-		jenkinsServer.addUserToProjectMatrix(NAME, USERNAME, Arrays.asList(Permission.COMPUTER_BUILD));
+		jenkinsServer.addUserToProjectMatrix(TestsData.JOB_NAME, TestsData.USERNAME, Arrays.asList(Permission.COMPUTER_BUILD));
 	}
 
 	@Test(expected = JenkinsServerException.class)
@@ -473,80 +485,198 @@ public class JenkinsServerTest {
 
 		mockGetJobByName(true);
 
-		jenkinsServer.removeUserFromProjectMatrix(NAME, USERNAME);
+		jenkinsServer.removeUserFromProjectMatrix(TestsData.JOB_NAME, TestsData.USERNAME);
 	}
 
 	@Test(expected = JenkinsServerException.class)
 	public void removeUserFromProjectMatrixNonConfiguredTest() throws Exception {
 
 		mockGetJobByName(false);
-		mockcheckAuthorizationStrategy(false);
+		mockCheckAuthorizationStrategy(false);
 
-		jenkinsServer.removeUserFromProjectMatrix(NAME, USERNAME);
+		jenkinsServer.removeUserFromProjectMatrix(TestsData.JOB_NAME, TestsData.USERNAME);
 	}
 
 	@Test
 	public void removeUserFromProjectMatrixTest() throws Exception {
 
 		mockGetJobByName(false);
-		mockcheckAuthorizationStrategy(true);
+		mockCheckAuthorizationStrategy(true);
 
-		jenkinsServer.removeUserFromProjectMatrix(NAME, USERNAME);
+		jenkinsServer.removeUserFromProjectMatrix(TestsData.JOB_NAME, TestsData.USERNAME);
+	}
+
+	@Test(expected = JenkinsServerException.class)
+	public void getCoverageReportElementJobDoesNotExistsTest() throws Exception {
+
+		mockGetJobByName(true);
+
+		CoverageReport coverageReport = jenkinsServer.getCoverageReport(TestsData.JOB_NAME, BUILD_NUMBER);
+
+		Assert.assertEquals(coverageReport.getName(), "Cobertura Coverage Report");
+	}
+
+	@Test(expected = JenkinsServerException.class)
+	public void getCoverageReportElementThrowsJenkinsServerExceptionTest() throws Exception {
+
+		mockGetJobByName(false);
+		mockGetDepth(true);
+
+		jenkinsServer.getCoverageReportElement(TestsData.JOB_NAME, BUILD_NUMBER, CoverageType.PACKAGES);
+	}
+
+	@Test(expected = JenkinsServerException.class)
+	public void getCoverageReportElementPluginNotConfiguredTest() throws Exception {
+
+		mockGet(false);
+		mockGetDepth(false);
+		Mockito.when(httpResponseStringMock.getStatus())
+			.thenReturn(HttpStatus.SC_OK)
+			.thenReturn(HttpStatus.SC_NOT_FOUND);
+		mockGetBody(JOB_JSON);
+
+		jenkinsServer.getCoverageReportElement(TestsData.JOB_NAME, BUILD_NUMBER, CoverageType.LINES);
+	}
+
+	@Test(expected = JenkinsServerException.class)
+	public void getCoverageReportElementWithoutElementsTest() throws Exception {
+
+		mockGetJobByName(false);
+		mockGetDepth(false);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(COVERAGE_REPORT_JSON);
+
+		jenkinsServer.getCoverageReportElement(TestsData.JOB_NAME, BUILD_NUMBER, CoverageType.CONDITIONALS);
+	}
+
+	@Test
+	public void getCoverageReportElementTest() throws Exception {
+
+		mockGetJobByName(false);
+		mockGetDepth(false);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(COVERAGE_REPORT_JSON);
+
+		CoverageElement coverageReportElement = jenkinsServer.getCoverageReportElement(TestsData.JOB_NAME, BUILD_NUMBER, CoverageType.FILES);
+
+		Assert.assertEquals(coverageReportElement.getName(), "Files");
+		Assert.assertEquals(coverageReportElement.getDenominator(), 176);
+		Assert.assertEquals(coverageReportElement.getNumerator(), 123);
+		Assert.assertEquals(coverageReportElement.getRatio(), 69.88636, 0.00001);
+	}
+
+	@Test
+	public void getTestResultsReportTest() throws Exception {
+
+		mockGetJobByName(false);
+		mockGetDepth(false);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockGetBody(TEST_RESULTS_REPORT_JSON);
+
+		TestResultsReport testResultsReport = jenkinsServer.getTestResultsReport(TestsData.JOB_NAME, BUILD_NUMBER);
+
+		Assert.assertEquals(testResultsReport.getDuration(), 23.822, 0.001);
+		Assert.assertFalse(testResultsReport.isEmpty());
+		Assert.assertEquals(testResultsReport.getFailCount(), 2);
+		Assert.assertEquals(testResultsReport.getPassCount(), 355);
+		Assert.assertEquals(testResultsReport.getSkipCount(), 0);
+	}
+
+	@Test
+	public void getStaticAnalysisReportTest() throws Exception {
+
+		mockGetJobByName(false);
+		mockGetDepth(false);
+		mockGetStatus(HttpStatus.SC_OK);
+		mockExecuteScript(STATIC_ANALYSIS_REPORT_JSON);
+
+		StaticAnalysisReport staticAnalysisReport = jenkinsServer.getStaticAnalysisReport(TestsData.JOB_NAME, BUILD_NUMBER);
+
+		Assert.assertEquals(staticAnalysisReport.getViolations().size(), 1);
+		Assert.assertEquals(staticAnalysisReport.getViolationsCount(), 10);
+	}
+
+	private void mockExecuteScript(String response) throws Exception {
+
+		Mockito.when(GroovyUtil.executeScript(
+					Mockito.any(JenkinsClient.class),
+					Mockito.anyString()))
+			.thenReturn(response);
+	}
+
+	private void mockGet(boolean throwsException) throws Exception {
+
+		if (throwsException) {
+			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
+				.thenThrow(new JenkinsClientException(null));
+		} else {
+			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
+				.thenReturn(httpResponseStringMock);
+		}
+	}
+
+	private void mockGetBody(String response) {
+
+		Mockito.when(httpResponseStringMock.getBody())
+			.thenReturn(response);
 	}
 
 	private void mockGetPluginByName(boolean throwsException) throws Exception {
 
 		if (throwsException) {
-			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-					.thenThrow(new JenkinsClientException(null));
+			mockGet(true);
 		} else {
-			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-					.thenReturn(httpResponseStringMock);
-			Mockito.when(httpResponseStringMock.getStatus())
-					.thenReturn(HttpStatus.SC_OK);
-			Mockito.when(httpResponseStringMock.getBody())
-					.thenReturn("{\"name\":\"junit\"}");
+			mockGet(false);
+			mockGetStatus(HttpStatus.SC_OK);
+			mockGetBody(PLUGIN_JSON);
 		}
+	}
+
+	private void mockGetStatus(int status) {
+
+		Mockito.when(httpResponseStringMock.getStatus())
+			.thenReturn(status);
 	}
 
 	private void mockGetViewByName(boolean throwsException) throws Exception {
 
 		if (throwsException) {
-			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-					.thenThrow(new JenkinsClientException(null));
+			mockGet(true);
 		} else {
-			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-					.thenReturn(httpResponseStringMock);
-			Mockito.when(httpResponseStringMock.getStatus())
-					.thenReturn(HttpStatus.SC_OK);
-			Mockito.when(httpResponseStringMock.getBody())
-					.thenReturn("{\"name\":\"View\"}");
+			mockGet(false);
+			mockGetStatus(HttpStatus.SC_OK);
+			mockGetBody(VIEW_JSON);
 		}
 	}
 
 	private void mockGetJobByName(boolean throwsException) throws Exception {
 
 		if (throwsException) {
-			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-					.thenThrow(new JenkinsClientException(null));
+			mockGet(true);
 		} else {
-			Mockito.when(jenkinsClientMock.get(Mockito.anyString()))
-					.thenReturn(httpResponseStringMock);
-			Mockito.when(httpResponseStringMock.getStatus())
-					.thenReturn(HttpStatus.SC_OK);
-			Mockito.when(httpResponseStringMock.getBody())
-					.thenReturn("{\"name\":\"Job\", \"nextBuildNumber\":2}");
+			mockGet(false);
+			mockGetStatus(HttpStatus.SC_OK);
+			mockGetBody(JOB_JSON);
 		}
 	}
 
-	private void mockcheckAuthorizationStrategy(boolean isConfigured) throws Exception {
+	private void mockCheckAuthorizationStrategy(boolean isConfigured) throws Exception {
 
 		if (isConfigured) {
-			PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
-					.thenReturn("");
+			mockExecuteScript("");
 		} else {
-			PowerMockito.when(GroovyUtil.executeScript(Mockito.any(JenkinsClient.class), Mockito.anyString()))
-					.thenReturn(FALSE);
+			mockExecuteScript(FALSE);
+		}
+	}
+
+	private void mockGetDepth(boolean throwsException) throws Exception {
+
+		if (throwsException) {
+			Mockito.when(jenkinsClientMock.getDepth(Mockito.anyString()))
+				.thenThrow(new JenkinsClientException(null));
+		} else {
+			Mockito.when(jenkinsClientMock.getDepth(Mockito.anyString()))
+				.thenReturn(httpResponseStringMock);
 		}
 	}
 }

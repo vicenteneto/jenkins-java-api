@@ -94,6 +94,17 @@ public class JenkinsClientTest {
 		jenkinsClient.get(PATH);
 	}
 
+	@Test
+	public void getDepthTest() throws Exception {
+
+		mockGetRequestHeader();
+
+		Mockito.when(getRequestMock.asString())
+				.thenReturn(null);
+
+		jenkinsClient.getDepth(PATH);
+	}
+
 	@Test(expected = JenkinsClientException.class)
 	public void postEmptyXMLTest() throws Exception {
 
