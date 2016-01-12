@@ -34,7 +34,7 @@ and:
     <dependency>
       <groupId>com.github.vicenteneto</groupId>
       <artifactId>jenkins-java-api</artifactId>
-      <version>v1.13.11</version>
+      <version>v1.13.12</version>
     </dependency>
   </dependencies>
 ```
@@ -49,7 +49,7 @@ repositories {
 and:
 ```gradle
 dependencies {
-    compile 'com.github.vicenteneto:jenkins-java-api:v1.12.6'
+    compile 'com.github.vicenteneto:jenkins-java-api:v1.13.12'
 }
 ```
 
