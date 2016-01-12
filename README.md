@@ -34,7 +34,7 @@ and:
     <dependency>
       <groupId>com.github.vicenteneto</groupId>
       <artifactId>jenkins-java-api</artifactId>
-      <version>v1.12.6</version>
+      <version>v1.13.11</version>
     </dependency>
   </dependencies>
 ```
@@ -175,6 +175,26 @@ jenkinsServer.addUserToProjectMatrix("jobName", "username", permissions);
 #### Remove user from project matrix authorization table
 ```java
 jenkinsServer.removeUserFromProjectMatrix("jobName", "username");
+```
+
+#### Get Code Coverage report
+```java
+CoverageReport coverageReport = jenkinsServer.getCoverageReport("jobName", 1);
+```
+
+#### Get Code Coverage Element report
+```java
+CoverageElement coverageReportElement = jenkinsServer.getCoverageReportElement("jobName", 1, CoverageType.CONDITIONALS);
+```
+
+#### Get Test Results report
+```java
+TestResultsReport testResultsReport = jenkinsServer.TestResultsReport("jobName", 1);
+```
+
+#### Get Static Analysis report
+```java
+StaticAnalysisReport staticAnalysisReport = jenkinsServer.getStaticAnalysisReport("jobName", 1);
 ```
 
 ## License
