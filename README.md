@@ -1,6 +1,6 @@
 # Jenkins Java API Wrapper
 
-[![GitHub Release](https://img.shields.io/github/release/vicenteneto/jenkins-java-api.svg)](https://github.com/vicenteneto/jenkins-java-api/latest)
+[![GitHub Release](https://img.shields.io/github/release/vicenteneto/jenkins-java-api.svg)](https://github.com/vicenteneto/jenkins-java-api)
 [![Build Status](https://travis-ci.org/vicenteneto/jenkins-java-api.svg?branch=master)](https://travis-ci.org/vicenteneto/jenkins-java-api)
 
 This project is a Java library for communicating with [Jenkins](https://github.com/jenkinsci/jenkins/). Jenkins is a cross-platform, continuous integration and continuous delivery application that increases your productivity ([see more](https://wiki.jenkins-ci.org/display/JENKINS/Meet+Jenkins)).
