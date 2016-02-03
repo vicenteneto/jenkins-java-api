@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
 
 import br.com.vicenteneto.api.jenkins.client.JenkinsClient;
+import br.com.vicenteneto.api.jenkins.domain.Build;
 import br.com.vicenteneto.api.jenkins.domain.CoverageType;
 import br.com.vicenteneto.api.jenkins.domain.Job;
 import br.com.vicenteneto.api.jenkins.domain.ListView;
@@ -287,6 +288,28 @@ public class JenkinsServer {
 		GroovyUtil.executeScript(jenkinsClient, String.format(script, jobName));
 
 		return job.getNextBuildNumber();
+	}
+
+	public Build getBuild(String jobName, int buildNumber) throws JenkinsServerException {
+
+		try {
+			if (!checkJobExists(jobName)) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), jobName));
+			}
+
+			String url = String.format(ConfigurationUtil.getConfiguration("URL_GET_BUILD"), jobName, buildNumber);
+			HttpResponse<String> httpResponse = jenkinsClient.get(url);
+
+			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("BUILD_NOT_FOUND"), buildNumber, jobName));
+			}
+
+			return gson.fromJson(httpResponse.getBody(), Build.class);
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
 	}
 
 	public void addUserToProjectMatrix(String jobName, String username, List<Permission> permissions)
