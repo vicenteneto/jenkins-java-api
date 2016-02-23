@@ -47,6 +47,17 @@ public class JenkinsClient {
 		return get(uri);
 	}
 
+	public HttpResponse<String> getDepthByURL(String url) throws JenkinsClientException {
+		try {
+			URIBuilder uri = new URIBuilder(url);
+			uri.addParameter(DEPTH_PARAM, DEPTH_VALUE);
+
+			return get(uri);
+		} catch (URISyntaxException exception) {
+			throw new JenkinsClientException(exception);
+		}
+	}
+
 	public HttpResponse<String> postXML(String path) throws JenkinsClientException {
 		return post(createURI(path), EMPTY_STRING, MediaType.APPLICATION_XML_VALUE);
 	}

@@ -405,6 +405,42 @@ public class JenkinsServer {
 		return gson.fromJson(response, StaticAnalysisReport.class);
 	}
 
+	public CoverageReport getCoverageReportByURL(String sourceURL) throws JenkinsServerException {
+
+		String jsonReport = getJsonReportByURL(sourceURL);
+
+		JSONObject jsonObject = new JSONObject(jsonReport);
+		return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), CoverageReport.class);
+	}
+
+	public CoverageElement getCoverageReportElementByURL(String sourceURL, CoverageType coverageType)
+			throws JenkinsServerException {
+
+		CoverageReport coverageReport = getCoverageReportByURL(sourceURL);
+
+		for (CoverageElement element : coverageReport.getElements()) {
+			if (coverageType.name().equalsIgnoreCase(element.getName())) {
+				return element;
+			}
+		}
+
+		throw new JenkinsServerException(ConfigurationUtil.getConfiguration("COVERAGE_REPORT_TYPE_ERROR"));
+	}
+
+	public TestResultsReport getTestResultsReportByURL(String sourceURL) throws JenkinsServerException {
+
+		String jsonReport = getJsonReportByURL(sourceURL);
+
+		return gson.fromJson(jsonReport, TestResultsReport.class);
+	}
+
+	public StaticAnalysisReport getStaticAnalysisReportByURL(String sourceURL) throws JenkinsServerException {
+	
+		String jsonReport = getJsonReportByURL(sourceURL);
+
+		return gson.fromJson(jsonReport, StaticAnalysisReport.class);
+	}
+
 	private boolean checkAuthorizationStrategyIsProjectMatrix() throws JenkinsServerException {
 
 		String checkAuthorizationStrategy = ConfigurationUtil.getConfiguration("GROOVY_IS_AUTHORIZATION_STRATEGY_EQUALS_PROJECT_MATRIX");
@@ -431,6 +467,22 @@ public class JenkinsServer {
 			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
 				throw new JenkinsServerException(
 						String.format(ConfigurationUtil.getConfiguration("PLUGIN_NOT_CONFIGURED_ON_THIS_JOB"), jobName));
+			}
+
+			return httpResponse.getBody();
+		} catch (JenkinsClientException exception) {
+			throw new JenkinsServerException(exception);
+		}
+	}
+
+	private String getJsonReportByURL(String sourceURL) throws JenkinsServerException {
+
+		try {
+			HttpResponse<String> httpResponse = jenkinsClient.getDepthByURL(sourceURL);
+
+			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
+				throw new JenkinsServerException(
+						String.format(ConfigurationUtil.getConfiguration("ERROR_PARSING_REPORT"), sourceURL));
 			}
 
 			return httpResponse.getBody();
