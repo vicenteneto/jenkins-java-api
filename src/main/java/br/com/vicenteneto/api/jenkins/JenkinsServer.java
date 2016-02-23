@@ -405,18 +405,18 @@ public class JenkinsServer {
 		return gson.fromJson(response, StaticAnalysisReport.class);
 	}
 
-	public CoverageReport getCoverageReportByURL(String sourceURL) throws JenkinsServerException {
+	public CoverageReport getCoverageReportByURL(String sourceURL, boolean local) throws JenkinsServerException {
 
-		String jsonReport = getJsonReportByURL(sourceURL);
+		String jsonReport = getJsonReportByURL(sourceURL, local);
 
 		JSONObject jsonObject = new JSONObject(jsonReport);
 		return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), CoverageReport.class);
 	}
 
-	public CoverageElement getCoverageReportElementByURL(String sourceURL, CoverageType coverageType)
+	public CoverageElement getCoverageReportElementByURL(String sourceURL, CoverageType coverageType, boolean local)
 			throws JenkinsServerException {
 
-		CoverageReport coverageReport = getCoverageReportByURL(sourceURL);
+		CoverageReport coverageReport = getCoverageReportByURL(sourceURL, local);
 
 		for (CoverageElement element : coverageReport.getElements()) {
 			if (coverageType.name().equalsIgnoreCase(element.getName())) {
@@ -427,16 +427,16 @@ public class JenkinsServer {
 		throw new JenkinsServerException(ConfigurationUtil.getConfiguration("COVERAGE_REPORT_TYPE_ERROR"));
 	}
 
-	public TestResultsReport getTestResultsReportByURL(String sourceURL) throws JenkinsServerException {
+	public TestResultsReport getTestResultsReportByURL(String sourceURL, boolean local) throws JenkinsServerException {
 
-		String jsonReport = getJsonReportByURL(sourceURL);
+		String jsonReport = getJsonReportByURL(sourceURL, local);
 
 		return gson.fromJson(jsonReport, TestResultsReport.class);
 	}
 
-	public StaticAnalysisReport getStaticAnalysisReportByURL(String sourceURL) throws JenkinsServerException {
+	public StaticAnalysisReport getStaticAnalysisReportByURL(String sourceURL, boolean local) throws JenkinsServerException {
 	
-		String jsonReport = getJsonReportByURL(sourceURL);
+		String jsonReport = getJsonReportByURL(sourceURL, local);
 
 		return gson.fromJson(jsonReport, StaticAnalysisReport.class);
 	}
@@ -475,10 +475,16 @@ public class JenkinsServer {
 		}
 	}
 
-	private String getJsonReportByURL(String sourceURL) throws JenkinsServerException {
+	private String getJsonReportByURL(String sourceURL, boolean local) throws JenkinsServerException {
 
 		try {
-			HttpResponse<String> httpResponse = jenkinsClient.getDepthByURL(sourceURL);
+			HttpResponse<String> httpResponse;
+			
+			if (local) {
+				httpResponse = jenkinsClient.getDepthByURL(sourceURL);
+			} else {
+				httpResponse = jenkinsClient.getByURL(sourceURL);
+			}
 
 			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
 				throw new JenkinsServerException(
