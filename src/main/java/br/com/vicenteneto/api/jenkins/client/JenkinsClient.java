@@ -47,6 +47,16 @@ public class JenkinsClient {
 		return get(uri);
 	}
 
+	public HttpResponse<String> getByURL(String url) throws JenkinsClientException {
+		try {
+			URIBuilder uri = new URIBuilder(url);
+
+			return get(uri);
+		} catch (URISyntaxException exception) {
+			throw new JenkinsClientException(exception);
+		}
+	}
+
 	public HttpResponse<String> getDepthByURL(String url) throws JenkinsClientException {
 		try {
 			URIBuilder uri = new URIBuilder(url);
