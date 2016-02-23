@@ -4,7 +4,7 @@
 
 	<groupId>br.com.vicenteneto</groupId>
 	<artifactId>jenkins-java-api</artifactId>
-	<version>1.13.12</version>
+	<version>1.15.23</version>
 	<packaging>jar</packaging>
 
 	<name>jenkins-java-api</name>
