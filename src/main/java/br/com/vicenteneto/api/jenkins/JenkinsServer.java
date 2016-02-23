@@ -431,16 +431,14 @@ public class JenkinsServer {
 
 		String jsonReport = getJsonReportByURL(sourceURL);
 
-		JSONObject jsonObject = new JSONObject(jsonReport);
-		return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), TestResultsReport.class);
+		return gson.fromJson(jsonReport, TestResultsReport.class);
 	}
 
 	public StaticAnalysisReport getStaticAnalysisReportByURL(String sourceURL) throws JenkinsServerException {
 	
 		String jsonReport = getJsonReportByURL(sourceURL);
 
-		JSONObject jsonObject = new JSONObject(jsonReport);
-		return gson.fromJson(jsonObject.getJSONObject(RESULTS).toString(), StaticAnalysisReport.class);
+		return gson.fromJson(jsonReport, StaticAnalysisReport.class);
 	}
 
 	private boolean checkAuthorizationStrategyIsProjectMatrix() throws JenkinsServerException {
@@ -480,7 +478,7 @@ public class JenkinsServer {
 	private String getJsonReportByURL(String sourceURL) throws JenkinsServerException {
 
 		try {
-			HttpResponse<String> httpResponse = jenkinsClient.getDepth(sourceURL);
+			HttpResponse<String> httpResponse = jenkinsClient.getDepthByURL(sourceURL);
 
 			if (httpResponse.getStatus() == HttpStatus.SC_NOT_FOUND) {
 				throw new JenkinsServerException(
