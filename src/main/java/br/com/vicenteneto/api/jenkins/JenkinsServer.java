@@ -186,6 +186,34 @@ public class JenkinsServer {
 		String script = GroovyUtil.concatenateStrings(view, setViewDescription, viewSave);
 		GroovyUtil.executeScript(jenkinsClient, script);
 	}
+	
+	public void updateView(String oldViewName, String newViewName, String newViewDescription) throws JenkinsServerException {
+		
+		if (!checkViewExists(oldViewName)) {
+			throw new JenkinsServerException(
+					String.format(ConfigurationUtil.getConfiguration("VIEW_DOES_NOT_EXISTS"), oldViewName));
+		}
+		
+		if (checkViewExists(newViewName)) {
+			throw new JenkinsServerException(
+					String.format(ConfigurationUtil.getConfiguration("VIEW_ALREADY_EXISTS"), newViewName));
+		}
+		
+		String view = String.format(ConfigurationUtil.getConfiguration("GROOVY_GET_VIEW"), oldViewName);
+		String setViewName = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_VIEW_NAME"), newViewName);
+		String setViewDescription = String.format(ConfigurationUtil.getConfiguration("GROOVY_SET_VIEW_DESCRIPTION"), newViewDescription);
+		String viewSave = ConfigurationUtil.getConfiguration("GROOVY_VIEW_SAVE");
+		
+		String script = GroovyUtil.concatenateStrings(view, setViewName, setViewDescription, viewSave);
+		
+		GroovyUtil.executeScript(jenkinsClient, script);
+		
+		if (checkViewExists(oldViewName) || !checkViewExists(newViewName)) {
+			throw new JenkinsServerException(
+					String.format(ConfigurationUtil.getConfiguration("ERROR_UPDATING_VIEW"), newViewName));
+		}
+		
+	}
 
 	public void deleteView(String viewName) throws JenkinsServerException {
 
@@ -246,6 +274,28 @@ public class JenkinsServer {
 		}
 	}
 
+	public void updateJob(String oldJobName, String newJobName) throws JenkinsServerException {
+		
+		if (!checkJobExists(oldJobName)) {
+			throw new JenkinsServerException(
+					String.format(ConfigurationUtil.getConfiguration("JOB_DOES_NOT_EXISTS"), oldJobName));
+		}
+		
+		if (checkJobExists(newJobName)) {
+			throw new JenkinsServerException(
+					String.format(ConfigurationUtil.getConfiguration("JOB_ALREADY_EXISTS"), newJobName));
+		}
+		
+		String script = ConfigurationUtil.getConfiguration("GROOVY_UPDATE_ITEM");
+		GroovyUtil.executeScript(jenkinsClient, String.format(script, oldJobName, newJobName));
+		
+		if (checkJobExists(oldJobName) || !checkJobExists(newJobName)) {
+			throw new JenkinsServerException(
+					String.format(ConfigurationUtil.getConfiguration("ERROR_UPDATING_JOB"), newJobName));
+		}
+		
+	}
+	
 	public void deleteJob(String jobName) throws JenkinsServerException {
 
 		if (!checkJobExists(jobName)) {
